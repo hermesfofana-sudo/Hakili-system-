@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hakili Atelier</title>
+<meta name="theme-color" content="#0C7F80">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout: one-column mobile app — sticky header, scrolling view, fixed bottom tab bar; widens to a centered 560px column on desktop */
+:root{
+  --bg:#EEF3F5; --surface:#FFFFFF; --sunk:#E3EAEE; --ink:#10212F; --muted:#5A6C7A; --line:#D5DEE4;
+  --accent:#0C7F80; --accent-soft:#D6EEEC; --on-accent:#FFFFFF; --navy:#12263A;
+  --good:#1D7A45; --good-soft:#DDF1E4; --warn:#9A5B00; --warn-soft:#FBEBCF; --info:#2B5C9C; --info-soft:#DEE8F6; --crit:#B3261E;
+  --f-ui:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A131B; --surface:#112030; --sunk:#0D1924; --ink:#E4ECF2; --muted:#93A4B2; --line:#223445;
+  --accent:#33B9B3; --accent-soft:#123A3C; --on-accent:#05201F; --navy:#E4ECF2;
+  --good:#5BCB8A; --good-soft:#123425; --warn:#E9B25A; --warn-soft:#3A2A0E; --info:#8DB4EA; --info-soft:#16283F; --crit:#F08B83; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A131B; --surface:#112030; --sunk:#0D1924; --ink:#E4ECF2; --muted:#93A4B2; --line:#223445;
+  --accent:#33B9B3; --accent-soft:#123A3C; --on-accent:#05201F; --navy:#E4ECF2;
+  --good:#5BCB8A; --good-soft:#123425; --warn:#E9B25A; --warn-soft:#3A2A0E; --info:#8DB4EA; --info-soft:#16283F; --crit:#F08B83; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:10px;padding-block:12px}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:800;font-size:15px}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand b{font-size:16px;letter-spacing:-.01em}
+.brand span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbar{display:flex;align-items:center;gap:8px;padding-block:0 10px}
+.mbar label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.mbar select{padding:7px 10px;font-weight:700}
+.demo{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);background:var(--warn-soft);padding:4px 8px;border-radius:99px;white-space:nowrap}
+main .wrap{padding-block:16px 110px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:22px;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:13px;margin:0;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+textarea{min-height:64px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:380px){.grid2{grid-template-columns:1fr}}
+button,.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:11px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn-g{background:var(--good);color:var(--surface);border-color:var(--good)}
+.btn-block{width:100%}
+.btn-s{padding:7px 10px;font-size:13px}
+.link{background:none;border:0;color:var(--accent);padding:0;font-weight:700;cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-recu{color:var(--muted);background:var(--sunk)}
+.s-diag{color:var(--info);background:var(--info-soft)}
+.s-piece{color:var(--warn);background:var(--warn-soft)}
+.s-rep{color:var(--accent);background:var(--accent-soft)}
+.s-pret{color:var(--good);background:var(--good-soft)}
+.s-rendu{color:var(--muted);background:transparent;border:1px solid var(--line)}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.filters button{white-space:nowrap;padding:7px 12px;font-size:13px;border-radius:99px}
+.filters button[aria-pressed="true"]{background:var(--navy);color:var(--surface);border-color:var(--navy)}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer;text-align:left;color:var(--ink);width:100%;font-weight:500}
+.item:hover{border-color:var(--accent)}
+.item .t{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .d{font-size:13px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .p{font-family:var(--f-mono);font-weight:600;text-align:right}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.checks label{display:flex;gap:8px;align-items:center;font-size:14px;background:var(--sunk);border-radius:8px;padding:8px 10px;cursor:pointer}
+.checks input{width:auto;accent-color:var(--accent)}
+.sig{width:100%;height:140px;background:var(--sunk);border:1px dashed var(--line);border-radius:10px;touch-action:none;display:block}
+.price{font-family:var(--f-mono);font-size:28px;font-weight:600;letter-spacing:-.02em}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.steps i{height:6px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.steps-l{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2}
+.steps-l .on{color:var(--ink);font-weight:700}
+.devis{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--sunk);display:flex;flex-direction:column;gap:8px;font-size:14px}
+.devis .l{display:flex;justify-content:space-between;gap:10px}
+.devis .tot{border-top:1px solid var(--line);padding-top:8px;font-weight:800}
+.tl{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.tl div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.kpi b{display:block;font-family:var(--f-mono);font-size:24px;font-weight:600;letter-spacing:-.02em}
+.kpi span{font-size:12.5px;color:var(--muted);font-weight:600}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:110px 1fr 34px;gap:10px;align-items:center;font-size:13px}
+.bar .tr{height:12px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.bar .fl{height:100%;background:var(--accent);border-radius:0 4px 4px 0}
+.bar .n{font-family:var(--f-mono);text-align:right}
+.tblw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:600px}
+td input[data-k="model"],td input[data-k="panne"]{min-width:130px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);background:var(--sunk)}
+td{padding:6px 8px;border-bottom:1px solid var(--line)}
+td input{padding:7px 8px;font-size:13.5px}
+td.m{font-family:var(--f-mono);text-align:right;white-space:nowrap}
+.photo{max-width:100%;border-radius:10px;border:1px solid var(--line)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-block:6px}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:700;color:var(--muted);text-decoration:none;padding:6px 0;border-radius:10px}
+nav.tabs a svg{width:22px;height:22px}
+nav.tabs a.on{color:var(--accent)}
+nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-radius:10px;padding:3px 12px;display:flex}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:var(--surface);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
+.client-hero{background:var(--navy);color:var(--surface);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:6px}
+.client-hero .big{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.note{font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.item,button{transition:border-color .15s,background .15s}}
+</style>
+<style>
+.login{gap:14px}
+.loading{display:grid;place-items:center;min-height:40vh;color:var(--muted);font-weight:700}
+.err{color:var(--crit);font-weight:600;font-size:14px}
+.btn[disabled]{opacity:.55;cursor:wait}
+.out{color:var(--crit)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="logo" aria-hidden="true">H</div>
+  <div class="brand"><b>Hakili Atelier</b><span id="shopName"></span></div>
+</div></header>
+
+<main><div class="wrap" id="app"><div class="loading">Chargement…</div></div></main>
+
+<nav class="tabs" id="tabs" aria-label="Navigation" hidden><div class="wrap">
+  <a href="#reparations" data-t="reparations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3.5 17.2a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.1-5.4l-2.4 2.4-2.1-.4-.4-2.1z"/></svg><span id="tabListe">Réparations</span></a>
+  <a href="#nouvelle" data-t="nouvelle" class="new"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Nouvelle</a>
+  <a href="#tableau" data-t="tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Tableau</a>
+  <a href="#tarifs" data-t="tarifs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg>Réglages</a>
+</div></nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// ===== Configuration =====
+const SUPA_URL='https://bscetltuebekpopvvdeb.supabase.co';
+const SUPA_KEY='sb_publishable_L6mmQsB-9uWamr5DxVWijQ_T-Ngho5u';
+const BUCKET='depots';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+const SC=['s-recu','s-diag','s-piece','s-rep','s-pret','s-rendu'];
+const METIERS={
+  phone:{nom:'Téléphonie',atelier:'Atelier Démo · Bordeaux',item:'Modèle',panne:'Panne',pannes:'Pannes',all:'Tous modèles',liste:'Réparations',
+    serial:'IMEI (facultatif)',serialShort:'IMEI',serialPh:'35 000000 000000 0',code:true,photo:"Photo de l'appareil",
+    etatPh:'Ex. rayure coque arrière, coin gauche enfoncé…',testsTitre:"Tests à l'entrée",testsNote:'Coche ce qui fonctionne au moment du dépôt.',ko:'Ne fonctionnait pas / non testé',okL:'Fonctionnait',
+    st:['Reçu','Diagnostic','Attente pièce','En réparation','Prêt','Rendu'],
+    tests:['Écran tactile','Face ID / Touch ID','Caméras','Haut-parleur','Micro','Charge','Réseau','Wi-Fi / Bluetooth'],
+    grid:[['iPhone 11','Écran',89,35],['iPhone 11','Batterie',59,18],['iPhone 11','Connecteur de charge',69,20],['iPhone 12','Écran',109,45],['iPhone 12','Batterie',69,22],['iPhone 12','Caméra arrière',89,38],['iPhone 13','Écran',129,55],['iPhone 13','Batterie',79,25],['iPhone 13','Connecteur de charge',79,24],['iPhone 14','Écran',159,75],['iPhone 14','Batterie',89,30],['Galaxy S21','Écran',149,80],['Galaxy S21','Batterie',69,22],['Galaxy A52','Écran',99,40],['Galaxy A52','Batterie',59,18],['Redmi Note 12','Écran',79,30],['Tous modèles','Diagnostic',0,0],['Tous modèles','Désoxydation',49,5]],
+    reps:[[15,0,0],[5,1,1],[1,3,2],[11,2,3],[6,4,4],[2,5,9],[7,5,12],[14,5,15],[9,5,19]],
+    etatDemo:'Rayure en bas à gauche de la coque, déjà présente au dépôt.'},
+  cordo:{nom:'Cordonnerie',atelier:'Cordonnerie Démo · Bordeaux',item:'Article',panne:'Prestation',pannes:'Prestations',all:'Tous articles',liste:'Réparations',
+    serial:null,code:false,photo:"Photo de l'article",
+    etatPh:'Ex. cuir griffé côté gauche, semelle usée au talon…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui est en bon état au dépôt.',ko:'Abîmé ou non vérifié',okL:'En bon état',
+    st:['Reçu','Diagnostic','Attente fourniture','En atelier','Prêt','Rendu'],
+    tests:['Semelle','Talons','Coutures','Cuir / tige','Doublure','Lacets / œillets','Fermeture','Teinte'],
+    grid:[['Chaussures homme','Patins de talon',18,4],['Chaussures homme','Ressemelage cuir',65,18],['Chaussures femme','Talons aiguille',20,4],['Chaussures femme','Patins caoutchouc',25,6],['Bottes','Fermeture éclair',35,8],['Sneakers','Nettoyage complet',35,6],['Sac cuir','Couture poignée',30,5],['Tous articles','Teinture',40,8],['Clés','Double de clé',6,1]],
+    reps:[[0,0,0],[5,1,1],[1,3,2],[4,2,3],[6,4,4],[2,5,9],[3,5,12],[7,5,15],[0,5,19]],
+    etatDemo:'Cuir griffé sur le côté gauche, déjà présent au dépôt.'},
+  retouche:{nom:'Retouche & couture',atelier:'Retouches Démo · Bordeaux',item:'Vêtement',panne:'Retouche',pannes:'Retouches',all:'Tous vêtements',liste:'Retouches',
+    serial:null,code:false,photo:'Photo du vêtement',
+    etatPh:'Ex. petite tache au col, bouton manquant…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui est fait ou en bon état au dépôt.',ko:'À signaler',okL:'Vérifié',
+    st:['Reçu','Essayage','Attente fourniture','En atelier','Prêt','Rendu'],
+    tests:['Tissu intact','Doublure','Boutons','Fermeture','Coutures','Sans tache','Mesures prises','Essayage fait'],
+    grid:[['Pantalon','Ourlet',12,1],['Pantalon','Taille à reprendre',18,1],['Jean','Ourlet d\'origine',15,1],['Robe','Raccourcir',25,2],['Veste','Raccourcir les manches',28,2],['Manteau','Fermeture éclair',35,8],['Chemise','Cintrer',20,1],['Robe de mariée','Retouche complète',180,10],['Tous vêtements','Bouton recousu',3,0]],
+    reps:[[0,0,0],[7,1,1],[1,3,2],[5,2,3],[3,4,4],[2,5,9],[6,5,12],[0,5,15],[4,5,19]],
+    etatDemo:'Petite tache au col, signalée au dépôt.'},
+  velo:{nom:'Vélo & trottinette',atelier:'Atelier Vélo Démo · Bordeaux',item:'Vélo',panne:'Intervention',pannes:'Interventions',all:'Tous vélos',liste:'Réparations',
+    serial:'N° Bicycode ou de cadre (facultatif)',serialShort:'Bicycode',serialPh:'00000000000000',code:false,photo:'Photo du vélo',
+    etatPh:'Ex. garde-boue arrière fendu, peinture écaillée…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui fonctionne au moment du dépôt.',ko:'Défaillant ou non testé',okL:'Fonctionnait',
+    st:['Reçu','Diagnostic','Attente pièce','En réparation','Prêt','Rendu'],
+    tests:['Freins','Dérailleur','Chaîne','Pneus','Roues','Éclairage','Batterie (VAE)','Direction'],
+    grid:[['Vélo de ville','Crevaison',15,4],['Vélo de ville','Révision complète',69,10],['Vélo de ville','Plaquettes de frein',25,10],['Vélo de route','Câbles et gaines',30,8],['VAE','Révision VAE',89,12],['VAE','Diagnostic batterie',35,0],['Trottinette','Crevaison',25,8],['Tous vélos','Réglage dérailleur',15,0]],
+    reps:[[0,0,0],[5,1,1],[2,3,2],[4,2,3],[1,4,4],[6,5,9],[7,5,12],[3,5,15],[0,5,19]],
+    etatDemo:'Garde-boue arrière fendu, déjà présent au dépôt.'},
+  horlo:{nom:'Horlogerie',atelier:'Horlogerie Démo · Bordeaux',item:'Montre',panne:'Intervention',pannes:'Interventions',all:'Toutes montres',liste:'Réparations',
+    serial:'N° de boîtier (facultatif)',serialShort:'Boîtier',serialPh:'N° gravé au dos',code:false,photo:'Photo de la montre',
+    etatPh:'Ex. verre rayé à 3 h, bracelet usé…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui est en bon état au dépôt.',ko:'Abîmé ou non vérifié',okL:'En bon état',
+    st:['Reçu','Diagnostic','Attente pièce','En révision','Prête','Rendue'],
+    tests:['Marche','Couronne','Verre','Aiguilles','Lunette','Bracelet','Fermoir','Étanchéité testée'],
+    grid:[['Montre quartz','Pile',15,2],['Montre quartz','Verre',45,12],['Montre automatique','Révision complète',250,40],['Montre automatique','Réglage de marche',60,0],['Bracelet cuir','Remplacement',35,12],['Toutes montres','Test d\'étanchéité',30,3],['Pendule','Révision',180,20]],
+    reps:[[0,0,0],[2,1,1],[1,3,2],[4,2,3],[0,4,4],[5,5,9],[3,5,12],[0,5,15],[2,5,19]],
+    etatDemo:'Verre rayé à 3 h, déjà présent au dépôt.'},
+  info:{nom:'Informatique & consoles',atelier:'Atelier Info Démo · Bordeaux',item:'Appareil',panne:'Panne',pannes:'Pannes',all:'Tous appareils',liste:'Réparations',
+    serial:'N° de série (facultatif)',serialShort:'N° de série',serialPh:'Sous l\'appareil',code:true,photo:"Photo de l'appareil",
+    etatPh:'Ex. coque fendue près de la charnière…',testsTitre:"Tests à l'entrée",testsNote:'Coche ce qui fonctionne au moment du dépôt.',ko:'Ne fonctionnait pas / non testé',okL:'Fonctionnait',
+    st:['Reçu','Diagnostic','Attente pièce','En réparation','Prêt','Rendu'],
+    tests:['Démarre','Écran','Clavier','Pavé tactile','Charge','Wi-Fi','Ports USB','Son'],
+    grid:[['PC portable','Écran',129,60],['PC portable','Nettoyage et pâte thermique',49,3],['MacBook Air','Batterie',149,70],['PS5','Port HDMI',89,15],['Switch','Joystick',39,8],['Manette','Joystick',35,6],['Tous appareils','Diagnostic',0,0],['Tous appareils','Réinstallation système',59,0]],
+    reps:[[3,0,0],[4,1,1],[2,3,2],[0,2,3],[1,4,4],[5,5,9],[1,5,12],[3,5,15],[7,5,19]],
+    etatDemo:'Coque fendue près de la charnière, déjà présente au dépôt.'}
+};
+
+let M=METIERS.phone,ST=M.st,TESTS=M.tests;
+function setM(id){M=METIERS[id]||METIERS.phone;ST=M.st;TESTS=M.tests}
+
+// ===== Outils =====
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=n=>(Math.round(n)||0).toLocaleString('fr-FR')+' €';
+const fd=d=>new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+const fdt=d=>new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+const sid=n=>'R-'+String(n||0).padStart(4,'0');
+let toastT;
+function toast(m){let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+function fail(e,msg){console.error(e);toast(msg||'Problème de connexion. Réessaie dans un instant.')}
+async function copy(txt,el){try{await navigator.clipboard.writeText(txt);toast('Copié')}catch(e){if(el){el.focus();el.select&&el.select()}toast('Sélectionne le texte et copie-le')}}
+const chip=st=>`<span class="chip ${SC[st]}">${ST[st]}</span>`;
+const isAll=m=>m===M.all;
+const pannesFor=m=>GRID.filter(g=>g.model===m||isAll(g.model));
+const models=()=>[...new Set(GRID.map(g=>g.model).filter(m=>!isAll(m)))];
+const waNum=t=>{let n=String(t||'').replace(/\D/g,'');if(n.startsWith('0'))n='33'+n.slice(1);return n};
+const trackUrl=tok=>location.origin+location.pathname+'#suivi-'+tok;
+function busy(b,on,txt){if(!b)return;if(on){b.dataset.t=b.textContent;b.disabled=true;b.textContent=txt||'Envoi…'}else{b.disabled=false;b.textContent=b.dataset.t||b.textContent}}
+const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}};
+
+// ===== État =====
+let USER=null,A=null,GRID=[],REPS=[],loading=false;
+const app=()=>$('#app');
+function chrome(on){$('#tabs').hidden=!on;$('#shopName').textContent=A?A.nom:'';$('#tabListe').textContent=M.liste}
+
+function toRep(r,hist){return {id:r.id,num:r.numero,client:r.client,tel:r.telephone||'',model:r.article||'',panne:r.prestation||'',prix:+r.prix||0,cout:+r.cout||0,st:r.statut,date:r.created_at,hist:hist.length?hist:[{s:0,d:r.created_at}],tests:r.tests||[],etat:r.etat||'',imei:r.numero_serie||'',photo:r.photo_path,sig:r.signature_path,token:r.suivi_token}}
+
+async function loadAll(){
+  if(loading)return;loading=true;
+  chrome(false);app().innerHTML='<div class="loading">Chargement de ton atelier…</div>';
+  try{
+    const {data:at,error}=await sb.from('ateliers').select('*').limit(1).maybeSingle();
+    if(error)throw error;
+    if(!at){A=null;loading=false;vOnboard();return}
+    A=at;setM(A.metier);
+    const [t,f,h]=await Promise.all([
+      sb.from('tarifs').select('*').eq('atelier_id',A.id).order('article').order('prestation'),
+      sb.from('fiches').select('*').eq('atelier_id',A.id).order('created_at',{ascending:false}),
+      sb.from('historique').select('fiche_id,statut,at').order('at')
+    ]);
+    for(const x of [t,f,h])if(x.error)throw x.error;
+    GRID=t.data.map(r=>({id:r.id,model:r.article,panne:r.prestation,prix:+r.prix||0,cout:+r.cout||0}));
+    const H={};h.data.forEach(x=>(H[x.fiche_id]=H[x.fiche_id]||[]).push({s:x.statut,d:x.at}));
+    REPS=f.data.map(r=>toRep(r,H[r.id]||[]));
+    loading=false;render();
+  }catch(e){loading=false;console.error(e);
+    app().innerHTML=`<div class="card"><h1>Connexion impossible</h1><p class="err">${esc(e.message||e)}</p><p class="small muted" style="margin:0">Vérifie que les tables Supabase sont bien créées, puis recharge la page.</p><button class="btn" id="retry">Réessayer</button></div>`;
+    $('#retry').onclick=loadAll}
+}
+
+// ===== Connexion =====
+function vLogin(msg){
+  chrome(false);
+  app().innerHTML=`<div class="card login"><h1>Connexion à ton atelier</h1>
+    <p class="small muted" style="margin:0">Entre ton e-mail. Tu reçois un lien de connexion, sans mot de passe à retenir.</p>
+    ${msg?`<p class="err" style="margin:0">${esc(msg)}</p>`:''}
+    <form id="lf" class="list" novalidate><label class="f">E-mail<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="atelier@exemple.fr"></label>
+    <button class="btn btn-p btn-block" type="submit" id="l-go">Recevoir le lien</button></form>
+    <div id="l-sent" class="list" hidden><p style="margin:0">Lien envoyé à <b id="l-to"></b>. Ouvre-le sur cet appareil.</p>
+      <form id="cf" class="list" novalidate><label class="f">Ou tape le code reçu par e-mail<input id="l-code" inputmode="numeric" autocomplete="one-time-code" class="mono" maxlength="10"></label>
+      <button class="btn btn-block" type="submit" id="c-go">Valider le code</button></form></div></div>`;
+  let mail='';
+  $('#lf').onsubmit=async e=>{e.preventDefault();mail=$('#l-mail').value.trim().toLowerCase();
+    if(!/^\S+@\S+\.\S+$/.test(mail)){toast('Entre une adresse e-mail valide');return}
+    const b=$('#l-go');busy(b,true);
+    const {error}=await sb.auth.signInWithOtp({email:mail,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
+    busy(b,false);
+    if(error){fail(error,error.status===429?'Trop de demandes. Attends une minute avant de réessayer.':'Envoi impossible : '+error.message);return}
+    $('#l-to').textContent=mail;$('#l-sent').hidden=false;toast('Lien envoyé')};
+  $('#cf').onsubmit=async e=>{e.preventDefault();const code=$('#l-code').value.trim();if(!code){toast('Entre le code reçu');return}
+    const b=$('#c-go');busy(b,true,'Vérification…');
+    const {error}=await sb.auth.verifyOtp({email:mail,token:code,type:'email'});
+    busy(b,false);if(error){fail(error,'Code incorrect ou expiré');return}};
+}
+
+// ===== Première configuration =====
+function vOnboard(){
+  chrome(false);
+  app().innerHTML=`<h1>Crée ton atelier</h1><p class="small muted" style="margin:0">Une minute. La grille de prix de ton métier est préremplie, tu l'ajustes ensuite.</p>
+  <form id="of" class="card" novalidate>
+    <label class="f">Nom affiché aux clients<input id="o-nom" placeholder="Ex. Cordonnerie du Centre"></label>
+    <label class="f">Métier<select id="o-met">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}">${esc(v.nom)}</option>`).join('')}</select></label>
+    <div class="grid2"><label class="f">Téléphone de l'atelier<input id="o-tel" inputmode="tel" placeholder="05 56 00 00 00"></label>
+    <label class="f">Garantie (mois)<input id="o-gar" type="number" value="6"></label></div>
+    <label class="f">TVA<select id="o-tva"><option value="micro">Micro-entreprise (TVA non applicable)</option><option value="tva">TVA 20 % incluse</option></select></label>
+    <button class="btn btn-p btn-block" type="submit" id="o-go">Créer mon atelier</button></form>
+  <button class="link small" id="o-out" style="align-self:flex-start">Se déconnecter</button>`;
+  $('#o-out').onclick=()=>sb.auth.signOut();
+  $('#of').onsubmit=async e=>{e.preventDefault();const nom=$('#o-nom').value.trim();if(!nom){toast("Indique le nom de l'atelier");return}
+    const met=$('#o-met').value,b=$('#o-go');busy(b,true,'Création…');
+    try{
+      const {data:at,error}=await sb.from('ateliers').insert({nom,metier:met,telephone:$('#o-tel').value.trim(),garantie_mois:+$('#o-gar').value||6,tva:$('#o-tva').value}).select().single();
+      if(error)throw error;
+      const rows=METIERS[met].grid.map(([article,prestation,prix,cout])=>({atelier_id:at.id,article,prestation,prix,cout}));
+      const {error:e2}=await sb.from('tarifs').insert(rows);if(e2)throw e2;
+      toast('Atelier créé');location.hash='reparations';await loadAll();
+    }catch(err){busy(b,false);fail(err,'Création impossible : '+(err.message||''))}
+  };
+}
+
+// ===== Liste =====
+let filter='encours',q='';
+function vList(){
+  const fl={encours:r=>r.st<4,pret:r=>r.st===4,rendu:r=>r.st===5,tous:()=>true};
+  const reps=REPS.filter(fl[filter]).filter(r=>!q||(r.client+r.model+r.panne+sid(r.num)+r.tel).toLowerCase().includes(q.toLowerCase()));
+  const cnt=k=>REPS.filter(fl[k]).length;
+  return `<div class="row between"><h1>${M.liste}</h1><span class="muted small">${REPS.length} fiche${REPS.length>1?'s':''}</span></div>
+  <input id="q" type="search" placeholder="Rechercher un client, un ${M.item.toLowerCase()}, un n°…" value="${esc(q)}" aria-label="Rechercher">
+  <div class="filters" role="group" aria-label="Filtrer">
+    ${[['encours','En cours'],['pret','Prêts'],['rendu','Rendus'],['tous','Tous']].map(([k,l])=>`<button data-f="${k}" aria-pressed="${filter===k}">${l} · ${cnt(k)}</button>`).join('')}
+  </div>
+  <div class="list">${reps.length?reps.map(r=>`<button class="item" data-open="${r.id}">
+    <span class="t">${esc(r.client)} <span class="muted mono small">${sid(r.num)}</span></span><span class="p">${eur(r.prix)}</span>
+    <span class="d">${esc(r.model)} · ${esc(r.panne)} · ${fd(r.date)}</span><span>${chip(r.st)}</span></button>`).join('')
+    :`<div class="card muted">${REPS.length?'Aucune fiche dans ce filtre.':'Aucune fiche pour l\'instant. Appuie sur <b>Nouvelle</b> pour enregistrer ton premier dépôt.'}</div>`}</div>`;
+}
+function bindList(){
+  const qi=$('#q');qi.oninput=()=>{q=qi.value;const p=qi.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;render()});
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>location.hash='fiche-'+b.dataset.open);
+}
+
+// ===== Nouvelle prise en charge =====
+function vNew(){
+  const ms=models();
+  if(!GRID.length)return `<h1>Nouvelle prise en charge</h1><div class="card">Ta grille de prix est vide. <a class="link" href="#tarifs">Ajoute une première ligne</a> dans Réglages.</div>`;
+  return `<h1>Nouvelle prise en charge</h1>
+  <form id="nf" class="list" novalidate>
+  <div class="card"><h2>Client</h2>
+    <div class="grid2"><label class="f">Nom<input id="n-client" placeholder="Prénom N."></label>
+    <label class="f">Téléphone<input id="n-tel" inputmode="tel" placeholder="06 00 00 00 00"></label></div></div>
+  <div class="card"><h2>${M.item} et ${M.panne.toLowerCase()}</h2>
+    <div class="grid2"><label class="f">${M.item}<select id="n-model">${(ms.length?ms:[M.all]).map(m=>`<option>${esc(m)}</option>`).join('')}</select></label>
+    <label class="f">${M.panne}<select id="n-panne"></select></label></div>
+    ${M.serial?`<label class="f">${M.serial}<input id="n-imei" class="mono" placeholder="${esc(M.serialPh)}"></label>`:''}
+    <div class="row between"><span class="muted small">Prix du devis (modifiable)</span><span class="small muted" id="n-marge"></span></div>
+    <div class="row"><input id="n-prix" type="number" inputmode="decimal" class="price" style="max-width:160px" aria-label="Prix du devis"><span class="price">€</span></div></div>
+  <div class="card"><h2>${M.testsTitre}</h2><p class="note" style="margin:0">${M.testsNote}</p>
+    <div class="checks">${TESTS.map((t,i)=>`<label><input type="checkbox" id="t${i}" value="${esc(t)}"> ${esc(t)}</label>`).join('')}</div>
+    <label class="f">État visuel<textarea id="n-etat" placeholder="${esc(M.etatPh)}"></textarea></label>
+    <label class="f">${M.photo}<input id="n-photo" type="file" accept="image/*" capture="environment"></label>
+    <img id="n-prev" class="photo" alt="Aperçu de la photo" hidden></div>
+  <div class="card"><div class="row between"><h2>Signature du client</h2><button type="button" class="link small" id="sig-clear">Effacer</button></div>
+    <canvas id="sig" class="sig" aria-label="Zone de signature"></canvas>
+    <label class="row small" style="gap:8px"><input type="checkbox" id="n-ok" style="width:auto;accent-color:var(--accent)"> Le client accepte le devis et l'état noté ci-dessus.</label></div>
+  ${M.code?`<p class="note" style="margin:0">Ne note jamais le code de déverrouillage du client.</p>`:''}
+  <button class="btn btn-p btn-block" type="submit" id="n-go">Enregistrer la prise en charge</button>
+  </form>`;
+}
+let photoData=null,sigDrawn=false;
+async function upload(path,dataUrl,type){
+  const blob=await (await fetch(dataUrl)).blob();
+  const {error}=await sb.storage.from(BUCKET).upload(path,blob,{contentType:type,upsert:true});
+  if(error)throw error;return path;
+}
+function bindNew(){
+  photoData=null;sigDrawn=false;
+  const m=$('#n-model');if(!m)return;
+  const p=$('#n-panne'),pr=$('#n-prix'),mg=$('#n-marge');
+  const cur=()=>pannesFor(m.value).find(g=>g.panne===p.value);
+  const mg2=()=>{const g=cur();const v=+pr.value||0;mg.textContent=g?`Fourniture ${eur(g.cout)} · marge ${eur(v-g.cout)}`:''};
+  const upd=()=>{const g=cur();if(g)pr.value=g.prix;mg2()};
+  const fill=()=>{p.innerHTML=pannesFor(m.value).map(g=>`<option>${esc(g.panne)}</option>`).join('');upd()};
+  m.onchange=fill;p.onchange=upd;pr.oninput=mg2;fill();
+  $('#n-photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);photoData=c.toDataURL('image/jpeg',.75);const pv=$('#n-prev');pv.src=photoData;pv.hidden=false};im.src=rd.result};rd.readAsDataURL(f)};
+  const cv=$('#sig'),ctx=cv.getContext('2d');
+  const r0=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=r0.width*dpr;cv.height=r0.height*dpr;ctx.scale(dpr,dpr);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.strokeStyle=getComputedStyle(document.body).color;
+  let dn=false;const pt=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  cv.onpointerdown=e=>{dn=true;cv.setPointerCapture(e.pointerId);const[x,y]=pt(e);ctx.beginPath();ctx.moveTo(x,y)};
+  cv.onpointermove=e=>{if(!dn)return;const[x,y]=pt(e);ctx.lineTo(x,y);ctx.stroke();sigDrawn=true};
+  cv.onpointerup=cv.onpointercancel=()=>dn=false;
+  $('#sig-clear').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);sigDrawn=false};
+  $('#nf').onsubmit=async e=>{e.preventDefault();
+    const client=$('#n-client').value.trim();if(!client){toast('Indique le nom du client');$('#n-client').focus();return}
+    if(!$('#n-ok').checked){toast('Le client doit accepter le devis');return}
+    const b=$('#n-go');busy(b,true,'Enregistrement…');
+    const id=crypto.randomUUID(),g=cur();let photo_path=null,signature_path=null,lost=false;
+    try{if(photoData)photo_path=await upload(`${A.id}/${id}/photo.jpg`,photoData,'image/jpeg')}catch(err){console.error(err);lost=true}
+    try{if(sigDrawn)signature_path=await upload(`${A.id}/${id}/signature.png`,cv.toDataURL('image/png'),'image/png')}catch(err){console.error(err);lost=true}
+    const row={id,atelier_id:A.id,client,telephone:$('#n-tel').value.trim(),article:m.value,prestation:p.value,prix:+pr.value||0,cout:g?g.cout:0,statut:0,
+      tests:TESTS.filter((t,i)=>$('#t'+i).checked),etat:$('#n-etat').value.trim(),numero_serie:$('#n-imei')?$('#n-imei').value.trim():null,photo_path,signature_path};
+    const {data,error}=await sb.from('fiches').insert(row).select().single();
+    if(error){busy(b,false);fail(error,"La fiche n'a pas été enregistrée. Vérifie ta connexion et réessaie.");return}
+    REPS.unshift(toRep(data,[{s:0,d:data.created_at}]));
+    toast(lost?'Fiche enregistrée, mais la photo ou la signature n\'a pas pu être envoyée':'Prise en charge enregistrée');
+    location.hash='fiche-'+id;
+  };
+}
+
+// ===== Fiche =====
+function devisHtml(r){
+  const tva=A.tva==='micro'?'TVA non applicable, art. 293 B du CGI':`dont TVA 20 % : ${(r.prix-r.prix/1.2).toFixed(2).replace('.',',')} €`;
+  return `<div class="devis"><div class="l"><b>${esc(A.nom)}</b><span class="mono small">Devis ${sid(r.num)}</span></div>
+  <div class="l small muted"><span>Client : ${esc(r.client)}</span><span>${fd(r.date)}</span></div>
+  <div class="l"><span>${esc(r.panne)} · ${esc(r.model)}<br><span class="small muted">Fourniture et main d'œuvre</span></span><span class="mono">${eur(r.prix)}</span></div>
+  <div class="l tot"><span>Total TTC</span><span class="mono">${eur(r.prix)}</span></div>
+  <div class="small muted">${tva} · Garantie ${A.garantie_mois} mois</div></div>`;
+}
+function readyMsg(r){const pr=r.client.split(' ')[0];return `Bonjour ${pr}, c'est prêt : ${r.model} (${r.panne.toLowerCase()}). Vous pouvez passer le récupérer chez ${A.nom}. Montant : ${eur(r.prix)}. Suivi : ${trackUrl(r.token)}`}
+function vFiche(id){
+  const r=REPS.find(x=>x.id===id);if(!r)return `<div class="card">Fiche introuvable. <a class="link" href="#reparations">Retour à la liste</a></div>`;
+  const nxt=r.st<5?ST[r.st+1]:null;
+  const hr=r.hist.filter(h=>h.s===5).pop(),fin=r.st===5&&hr?new Date(new Date(hr.d).setMonth(new Date(hr.d).getMonth()+ +A.garantie_mois)):null;
+  const ko=TESTS.filter(t=>!r.tests.includes(t));
+  return `<button class="link small" data-back style="align-self:flex-start">← ${M.liste}</button>
+  <div class="row between"><h1>${esc(r.client)}</h1>${chip(r.st)}</div>
+  <div class="muted small mono">${sid(r.num)} · déposé le ${fdt(r.date)}</div>
+  <div class="card"><div class="steps">${ST.map((s,i)=>`<i class="${i<=r.st?'on':''}"></i>`).join('')}</div>
+    <div class="steps-l">${ST.map((s,i)=>`<span class="${i===r.st?'on':''}">${s}</span>`).join('')}</div>
+    ${nxt?`<button class="btn ${r.st===3?'btn-g':'btn-p'} btn-block" id="adv">Passer à « ${nxt} »</button>`:`<div class="small">Rendu au client.${fin?` Garantie jusqu'au <b>${fin.toLocaleDateString('fr-FR')}</b>.`:''}</div>`}
+    <label class="f">Changer le statut<select id="st">${ST.map((s,i)=>`<option value="${i}" ${i===r.st?'selected':''}>${s}</option>`).join('')}</select></label></div>
+  ${r.st===4?`<div class="card"><h2>Prévenir le client</h2>
+    <textarea id="msg" class="small" readonly>${esc(readyMsg(r))}</textarea>
+    <div class="grid2"><a class="btn btn-g" target="_blank" rel="noopener" href="https://wa.me/${waNum(r.tel)}?text=${encodeURIComponent(readyMsg(r))}">Ouvrir WhatsApp</a><button class="btn" id="cpmsg">Copier le message</button></div>
+    <p class="note" style="margin:0">Le message s'ouvre prêt à envoyer. Vérifie qu'il est bien parti dans WhatsApp.</p></div>`:''}
+  <div class="card"><h2>Client</h2><div class="row between"><span>${esc(r.client)}</span><span class="mono" style="user-select:all">${esc(r.tel||'—')}</span></div>
+    <div class="grid2"><a class="btn btn-s" href="#suivi-${r.token}">Voir la page de suivi</a><button class="btn btn-s" id="cplink">Copier le lien de suivi</button></div></div>
+  <div class="card"><h2>Devis accepté</h2>${devisHtml(r)}
+    <div class="small muted">Coût fourniture ${eur(r.cout)} · marge <b class="mono" style="color:var(--ink)">${eur(r.prix-r.cout)}</b></div></div>
+  <div class="card"><h2>État au dépôt</h2>
+    ${r.imei?`<div class="small">${esc(M.serialShort||'N°')} <span class="mono">${esc(r.imei)}</span></div>`:''}
+    <div class="small"><b>${M.okL} :</b> ${r.tests.length?r.tests.map(esc).join(', '):'rien de coché'}</div>
+    ${ko.length?`<div class="small" style="color:var(--crit)"><b>${M.ko} :</b> ${ko.map(esc).join(', ')}</div>`:''}
+    ${r.etat?`<div class="small"><b>Visuel :</b> ${esc(r.etat)}</div>`:''}
+    ${r.photo?`<img class="photo" data-path="${esc(r.photo)}" alt="Photo au dépôt">`:''}
+    ${r.sig?`<div class="small muted">Signature du client</div><img class="photo" style="background:#fff" data-path="${esc(r.sig)}" alt="Signature">`:`<div class="small muted">Devis accepté par le client.</div>`}</div>
+  <div class="card"><h2>Historique</h2><div class="tl">${r.hist.slice().reverse().map(h=>`<div><span>${ST[h.s]}</span><span class="mono muted">${fdt(h.d)}</span></div>`).join('')}</div></div>`;
+}
+async function setSt(r,s,el){
+  if(el)el.disabled=true;
+  const {error}=await sb.from('fiches').update({statut:s}).eq('id',r.id);
+  if(error){if(el)el.disabled=false;fail(error,"Statut non enregistré. Réessaie.");render();return}
+  r.st=s;r.hist.push({s,d:new Date().toISOString()});render();toast('Statut : '+ST[s]);
+}
+function bindFiche(id){
+  const r=REPS.find(x=>x.id===id);if(!r)return;
+  $('[data-back]').onclick=()=>location.hash='reparations';
+  const a=$('#adv');if(a)a.onclick=()=>setSt(r,r.st+1,a);
+  $('#st').onchange=e=>setSt(r,+e.target.value,e.target);
+  $('#cplink').onclick=()=>copy(trackUrl(r.token));
+  const c=$('#cpmsg');if(c)c.onclick=()=>copy(readyMsg(r),$('#msg'));
+  document.querySelectorAll('img[data-path]').forEach(async im=>{
+    const {data,error}=await sb.storage.from(BUCKET).createSignedUrl(im.dataset.path,3600);
+    if(error){im.replaceWith(Object.assign(document.createElement('div'),{className:'small muted',textContent:'Image indisponible.'}));return}
+    im.src=data.signedUrl});
+}
+
+// ===== Page de suivi client (publique) =====
+async function vSuivi(tok){
+  const mine=USER&&REPS.find(r=>r.token===tok);
+  chrome(!!mine);
+  if(!mine){$('#shopName').textContent=''}
+  app().innerHTML='<div class="loading">Chargement du suivi…</div>';
+  const {data,error}=await sb.rpc('suivi',{p_token:tok});
+  if(error||!data){app().innerHTML=`<div class="card"><h1>Suivi introuvable</h1><p class="small muted" style="margin:0">Ce lien n'est plus valable. Contacte l'atelier.</p></div>`;return}
+  setM(data.metier);
+  if(!mine)$('#shopName').textContent=data.atelier;
+  const st=data.statut;
+  const txt=['Bien reçu à l\'atelier.','L\'artisan examine le travail à faire.','On attend une pièce ou une fourniture. On vous prévient dès réception.','C\'est entre les mains de l\'artisan.','C\'est prêt ! Vous pouvez venir le récupérer.','Rendu. Merci pour votre confiance.'][st];
+  app().innerHTML=`${mine?`<p class="note" style="margin:0">Ce que voit ton client · <button class="link small" data-back>retour à la fiche</button></p>`:''}
+  <div class="client-hero"><span class="small" style="opacity:.75">${esc(data.atelier)}</span><span class="big">${esc(data.article)}</span><span>${esc(data.prestation)} · n° <span class="mono">${sid(data.numero)}</span></span></div>
+  <div class="card"><div class="row between"><b>${ST[st]}</b>${chip(st)}</div><div>${txt}</div>
+    <div class="steps">${ST.map((s,i)=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div>
+    <div class="steps-l">${ST.map((s,i)=>`<span class="${i===st?'on':''}">${s}</span>`).join('')}</div></div>
+  <div class="card"><div class="row between"><span>Montant du devis</span><b class="mono">${eur(data.prix)}</b></div>
+    <div class="row between small muted"><span>Déposé le</span><span>${fdt(data.depose_le)}</span></div>
+    <div class="row between small muted"><span>Garantie</span><span>${data.garantie_mois} mois</span></div></div>
+  ${data.telephone?`<div class="card"><h2>Une question ?</h2><span class="mono" style="user-select:all">${esc(data.telephone)}</span></div>`:''}`;
+  if(mine){setM(A.metier);const b=$('[data-back]');if(b)b.onclick=()=>location.hash='fiche-'+mine.id}
+}
+
+// ===== Tableau de bord =====
+function vTableau(){
+  const now=new Date(),mo=d=>{d=new Date(d);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()};
+  const rendusM=REPS.filter(r=>{const h=r.hist.filter(x=>x.s===5).pop();return r.st===5&&h&&mo(h.d)});
+  const ca=rendusM.reduce((a,r)=>a+r.prix,0),cout=rendusM.reduce((a,r)=>a+r.cout,0);
+  const enc=REPS.filter(r=>r.st<4).length,prets=REPS.filter(r=>r.st===4);
+  const byS=ST.map((s,i)=>REPS.filter(r=>r.st===i).length),mx=Math.max(1,...byS);
+  const pc={};REPS.forEach(r=>pc[r.panne]=(pc[r.panne]||0)+1);const top=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,5),mx2=Math.max(1,...top.map(t=>t[1]));
+  const mois=now.toLocaleDateString('fr-FR',{month:'long'});
+  return `<h1>Tableau de bord</h1>
+  <div class="kpis">
+    <div class="kpi"><b>${enc}</b><span>${M.liste} en cours</span></div>
+    <div class="kpi"><b style="color:var(--good)">${prets.length}</b><span>Prêts à récupérer</span></div>
+    <div class="kpi"><b>${eur(ca)}</b><span>Travaux rendus en ${mois}</span></div>
+    <div class="kpi"><b>${ca?Math.round((ca-cout)/ca*100):0} %</b><span>Marge en ${mois} (${eur(ca-cout)})</span></div>
+  </div>
+  ${prets.length?`<div class="card"><h2>À prévenir ou à rendre</h2><div class="list">${prets.map(r=>`<button class="item" data-open="${r.id}"><span class="t">${esc(r.client)}</span><span class="p">${eur(r.prix)}</span><span class="d">${esc(r.model)} · ${esc(r.panne)}</span><span>${chip(4)}</span></button>`).join('')}</div></div>`:''}
+  <div class="card"><h2>Fiches par statut</h2><div class="bars">${ST.map((s,i)=>`<div class="bar"><span>${s}</span><span class="tr"><span class="fl" style="display:block;width:${byS[i]/mx*100}%"></span></span><span class="n">${byS[i]}</span></div>`).join('')}</div></div>
+  ${top.length?`<div class="card"><h2>${M.pannes} les plus fréquentes</h2><div class="bars">${top.map(([p,n])=>`<div class="bar"><span>${esc(p)}</span><span class="tr"><span class="fl" style="display:block;width:${n/mx2*100}%"></span></span><span class="n">${n}</span></div>`).join('')}</div></div>`:''}`;
+}
+function bindTableau(){document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>location.hash='fiche-'+b.dataset.open)}
+
+// ===== Réglages : tarifs + atelier =====
+let outAsk=false;
+function vTarifs(){
+  return `<h1>Grille de tarifs</h1><p class="muted small" style="margin:0">Remplie une seule fois. Les devis se calculent ensuite tout seuls. Les changements s'enregistrent automatiquement.</p>
+  <div class="tblw"><table><thead><tr><th>${M.item}</th><th>${M.panne}</th><th>Prix client</th><th>Coût fourniture</th><th style="text-align:right">Marge</th><th></th></tr></thead><tbody>
+  ${GRID.map((g,i)=>`<tr><td><input data-g="${i}" data-k="model" value="${esc(g.model)}" aria-label="${M.item}"></td><td><input data-g="${i}" data-k="panne" value="${esc(g.panne)}" aria-label="${M.panne}"></td>
+  <td><input data-g="${i}" data-k="prix" type="number" class="mono" value="${g.prix}" style="width:76px" aria-label="Prix"></td><td><input data-g="${i}" data-k="cout" type="number" class="mono" value="${g.cout}" style="width:76px" aria-label="Coût"></td>
+  <td class="m" id="mg${i}">${eur(g.prix-g.cout)}</td><td><button class="btn btn-s" data-del="${i}" aria-label="Supprimer la ligne">×</button></td></tr>`).join('')}
+  </tbody></table></div>
+  <button class="btn" id="addrow">+ Ajouter une ligne</button>
+  <div class="card"><h2>Atelier</h2>
+    <label class="f">Nom affiché aux clients<input id="s-name" value="${esc(A.nom)}"></label>
+    <label class="f">Métier<select id="s-met">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}" ${k===A.metier?'selected':''}>${esc(v.nom)}</option>`).join('')}</select></label>
+    <div class="grid2"><label class="f">Téléphone<input id="s-tel" value="${esc(A.telephone||'')}"></label>
+    <label class="f">Garantie (mois)<input id="s-gar" type="number" value="${A.garantie_mois}"></label></div>
+    <label class="f">TVA<select id="s-tva"><option value="micro" ${A.tva==='micro'?'selected':''}>Micro-entreprise (TVA non applicable)</option><option value="tva" ${A.tva==='tva'?'selected':''}>TVA 20 % incluse</option></select></label></div>
+  <div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
+    ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}</div>`;
+}
+const saveRow=debounce(async g=>{const {error}=await sb.from('tarifs').update({article:g.model,prestation:g.panne,prix:g.prix,cout:g.cout}).eq('id',g.id);if(error)fail(error,'Tarif non enregistré')},700);
+const saveShop=debounce(async patch=>{const {error}=await sb.from('ateliers').update(patch).eq('id',A.id);if(error)fail(error,'Réglage non enregistré')},700);
+function bindTarifs(){
+  document.querySelectorAll('[data-g]').forEach(inp=>inp.oninput=()=>{const g=GRID[+inp.dataset.g],k=inp.dataset.k;g[k]=(k==='prix'||k==='cout')?(+inp.value||0):inp.value;$('#mg'+inp.dataset.g).textContent=eur(g.prix-g.cout);saveRow(g)});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{const g=GRID[+b.dataset.del];b.disabled=true;const {error}=await sb.from('tarifs').delete().eq('id',g.id);if(error){b.disabled=false;fail(error,'Suppression impossible');return}GRID.splice(GRID.indexOf(g),1);render()});
+  $('#addrow').onclick=async()=>{const b=$('#addrow');busy(b,true,'Ajout…');const row={atelier_id:A.id,article:GRID[0]?GRID[0].model:M.item,prestation:'Nouvelle prestation',prix:0,cout:0};
+    const {data,error}=await sb.from('tarifs').insert(row).select().single();busy(b,false);if(error){fail(error,'Ajout impossible');return}
+    GRID.push({id:data.id,model:data.article,panne:data.prestation,prix:0,cout:0});render()};
+  $('#s-name').oninput=e=>{A.nom=e.target.value;$('#shopName').textContent=A.nom;saveShop({nom:A.nom})};
+  $('#s-tel').oninput=e=>{A.telephone=e.target.value;saveShop({telephone:A.telephone})};
+  $('#s-gar').oninput=e=>{A.garantie_mois=+e.target.value||0;saveShop({garantie_mois:A.garantie_mois})};
+  $('#s-tva').onchange=e=>{A.tva=e.target.value;saveShop({tva:A.tva})};
+  $('#s-met').onchange=e=>{A.metier=e.target.value;setM(A.metier);saveShop({metier:A.metier});render();toast('Métier : '+M.nom)};
+  const o=$('#out');if(o)o.onclick=()=>{outAsk=true;render()};
+  const n=$('#out-no');if(n)n.onclick=()=>{outAsk=false;render()};
+  const y=$('#out-yes');if(y)y.onclick=()=>{outAsk=false;sb.auth.signOut()};
+}
+
+// ===== Routeur =====
+function render(){
+  const h=location.hash.slice(1)||'reparations',el=app();
+  chrome(true);
+  let tab=h;
+  if(h.startsWith('fiche-')){const id=h.slice(6);el.innerHTML=vFiche(id);bindFiche(id);tab='reparations'}
+  else if(h==='nouvelle'){el.innerHTML=vNew();bindNew()}
+  else if(h==='tableau'){el.innerHTML=vTableau();bindTableau()}
+  else if(h==='tarifs'){el.innerHTML=vTarifs();bindTarifs()}
+  else{tab='reparations';el.innerHTML=vList();bindList()}
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.t===tab));
+}
+async function route(){
+  const h=location.hash.slice(1);
+  if(h.startsWith('suivi-')){await vSuivi(h.slice(6));return}
+  if(!USER){vLogin();return}
+  if(!A){await loadAll();return}
+  render();
+}
+let lastH=null;
+window.addEventListener('hashchange',()=>{route();if(lastH!==location.hash)window.scrollTo(0,0);lastH=location.hash});
+
+sb.auth.onAuthStateChange((ev,session)=>{
+  const u=session?.user||null;
+  if(u&&(!USER||USER.id!==u.id)){USER=u;A=null;if(!location.hash.startsWith('#suivi-'))setTimeout(()=>{cleanHash();loadAll()},0)}
+  else if(!u&&USER){USER=null;A=null;GRID=[];REPS=[];if(!location.hash.startsWith('#suivi-')){location.hash='';vLogin()}}
+});
+function cleanHash(){if(/access_token|refresh_token|type=|error=/.test(location.hash))history.replaceState(null,'',location.pathname+'#reparations')}
+
+(async function boot(){
+  const err=/error_description=([^&]+)/.exec(location.hash);
+  const {data:{session}}=await sb.auth.getSession();
+  if(location.hash.startsWith('#suivi-')){USER=session?.user||null;await vSuivi(location.hash.slice(7));return}
+  if(err&&!session){cleanHash();vLogin(decodeURIComponent(err[1].replace(/\+/g,' ')));return}
+  if(!session){vLogin();return}
+  USER=session.user;cleanHash();await loadAll();
+})();
+
+</script>
+</body>
+</html>
