@@ -261,26 +261,34 @@ async function loadAll(){
 // ===== Connexion =====
 function vLogin(msg){
   chrome(false);
-  app().innerHTML=`<div class="card login"><h1>Connexion à ton atelier</h1>
-    <p class="small muted" style="margin:0">Entre ton e-mail. Tu reçois un lien de connexion, sans mot de passe à retenir.</p>
+  let mode='in';
+  const draw=()=>{
+  app().innerHTML=`<div class="card login"><h1>${mode==='in'?'Connexion à ton atelier':'Créer ton compte'}</h1>
     ${msg?`<p class="err" style="margin:0">${esc(msg)}</p>`:''}
-    <form id="lf" class="list" novalidate><label class="f">E-mail<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="atelier@exemple.fr"></label>
-    <button class="btn btn-p btn-block" type="submit" id="l-go">Recevoir le lien</button></form>
-    <div id="l-sent" class="list" hidden><p style="margin:0">Lien envoyé à <b id="l-to"></b>. Ouvre-le sur cet appareil.</p>
-      <form id="cf" class="list" novalidate><label class="f">Ou tape le code reçu par e-mail<input id="l-code" inputmode="numeric" autocomplete="one-time-code" class="mono" maxlength="10"></label>
-      <button class="btn btn-block" type="submit" id="c-go">Valider le code</button></form></div></div>`;
-  let mail='';
-  $('#lf').onsubmit=async e=>{e.preventDefault();mail=$('#l-mail').value.trim().toLowerCase();
-    if(!/^\S+@\S+\.\S+$/.test(mail)){toast('Entre une adresse e-mail valide');return}
-    const b=$('#l-go');busy(b,true);
-    const {error}=await sb.auth.signInWithOtp({email:mail,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
-    busy(b,false);
-    if(error){fail(error,error.status===429?'Trop de demandes. Attends une minute avant de réessayer.':'Envoi impossible : '+error.message);return}
-    $('#l-to').textContent=mail;$('#l-sent').hidden=false;toast('Lien envoyé')};
-  $('#cf').onsubmit=async e=>{e.preventDefault();const code=$('#l-code').value.trim();if(!code){toast('Entre le code reçu');return}
-    const b=$('#c-go');busy(b,true,'Vérification…');
-    const {error}=await sb.auth.verifyOtp({email:mail,token:code,type:'email'});
-    busy(b,false);if(error){fail(error,'Code incorrect ou expiré');return}};
+    <form id="lf" class="list" novalidate>
+      <label class="f">E-mail<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="atelier@exemple.fr"></label>
+      <label class="f">Mot de passe<input id="l-pass" type="password" autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?'Ton mot de passe':'8 caractères minimum'}"></label>
+      <button class="btn btn-p btn-block" type="submit" id="l-go">${mode==='in'?'Se connecter':'Créer mon compte'}</button></form>
+    <button class="link small" id="l-sw" style="align-self:flex-start">${mode==='in'?'Pas encore de compte ? Créer un compte':'Déjà un compte ? Se connecter'}</button></div>`;
+  $('#l-sw').onclick=()=>{mode=mode==='in'?'up':'in';msg='';const m=$('#l-mail').value;draw();$('#l-mail').value=m};
+  $('#lf').onsubmit=async e=>{e.preventDefault();
+    const email=$('#l-mail').value.trim().toLowerCase(),password=$('#l-pass').value;
+    if(!/^\S+@\S+\.\S+$/.test(email)){toast('Entre une adresse e-mail valide');return}
+    if(password.length<8){toast('Le mot de passe doit faire au moins 8 caractères');return}
+    const b=$('#l-go');busy(b,true,mode==='in'?'Connexion…':'Création…');
+    if(mode==='in'){
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      busy(b,false);
+      if(error){fail(error,/invalid/i.test(error.message)?'E-mail ou mot de passe incorrect.':'Connexion impossible : '+error.message)}
+    }else{
+      const {data,error}=await sb.auth.signUp({email,password});
+      busy(b,false);
+      if(error){fail(error,/registered|exists/i.test(error.message)?'Ce compte existe déjà. Connecte-toi.':'Création impossible : '+error.message);return}
+      if(!data.session){toast('Compte créé. Valide l\'e-mail reçu, puis connecte-toi.');mode='in';draw();$('#l-mail').value=email}
+    }
+  };
+  };
+  draw();
 }
 
 // ===== Première configuration =====
