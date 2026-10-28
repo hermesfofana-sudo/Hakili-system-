@@ -128,6 +128,14 @@ nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-ra
 .err{color:var(--crit);font-weight:600;font-size:14px}
 .btn[disabled]{opacity:.55;cursor:wait}
 .out{color:var(--crit)}
+.mic-card{gap:8px}
+#mic.rec{background:var(--crit);border-color:var(--crit)}
+@media (prefers-reduced-motion:no-preference){#mic.rec{animation:pulse 1.2s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.75}}
+.relance-box{display:flex;flex-direction:column;gap:8px;background:var(--warn-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.rl{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.rl:last-child{border-bottom:0}
+.rl-t{display:flex;flex-direction:column;align-items:flex-start;text-align:left;color:var(--ink);font-weight:500;min-width:0}
 </style>
 </head>
 <body>
@@ -230,12 +238,41 @@ const trackUrl=tok=>location.origin+location.pathname+'#suivi-'+tok;
 function busy(b,on,txt){if(!b)return;if(on){b.dataset.t=b.textContent;b.disabled=true;b.textContent=txt||'Envoi…'}else{b.disabled=false;b.textContent=b.dataset.t||b.textContent}}
 const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}};
 
+// ===== Dictée : analyse de la phrase =====
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const flat=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[’']/g,' ').replace(/\s+/g,' ').trim();
+const PANNE_SYN=[[/\b(ecran|vitre avant|tactile|afficheur|ecran casse)\b/,'Écran'],[/\bbatterie\b/,'Batterie'],[/\b(connecteur|port de charge|charge (?:plus|pas|marche|ne)|ne charge|recharge|la charge)\b/,'Connecteur de charge'],
+  [/\b(camera|appareil photo)\b/,'Caméra arrière'],[/\b(vitre arriere|dos casse|arriere casse)\b/,'Vitre arrière'],[/\b(oxyde|oxydation|tombe dans l eau|dans l eau|mouille)\b/,'Désoxydation'],[/\b(diagnostic|diag)\b/,'Diagnostic']];
+function parseDictee(text,models,pannes){
+  const t=flat(text),out={};
+  // modèle : le plus long nom de la grille présent dans la phrase
+  let best='';models.forEach(m=>{const f=flat(m);if(f&&t.includes(f)&&f.length>best.length){best=f;out.model=m}});
+  if(!out.model){const x=/\b(iphone|galaxy|samsung|redmi|xiaomi|pixel|huawei|oppo|honor|motorola|macbook|ps5|ps4|switch|xbox)\b(\s+(?:se|note|pro|max|plus|ultra|lite|air|mini|[a-z]?\d{1,3}[a-z]?)){0,3}/.exec(t);
+    if(x)out.model=x[0].replace(/\b\w/g,c=>c.toUpperCase()).replace(/^Iphone/,'iPhone').replace(/^Ps/,'PS').replace(/^Macbook/,'MacBook')}
+  // prestation : nom de la grille, sinon synonyme courant
+  let bp='';pannes.forEach(p=>{const f=flat(p);if(f&&t.includes(f)&&f.length>bp.length){bp=f;out.panne=p}});
+  if(!out.panne){for(const [re,p] of PANNE_SYN){if(re.test(t)){const g=pannes.find(x=>flat(x)===flat(p));out.panne=g||p;break}}}
+  if(!out.panne){const w=pannes.find(p=>{const f=flat(p).split(' ')[0];return f.length>3&&new RegExp('\\b'+f).test(t)});if(w)out.panne=w}
+  // téléphone
+  const tel=/(?:\+33|0)(?:[\s.-]*\d){9}/.exec(text);if(tel){const d=tel[0].replace(/\D/g,'').replace(/^33/,'0');out.tel=d.replace(/(\d{2})(?=\d)/g,'$1 ').trim()}
+  // prix
+  const px=/(\d{1,4})(?:[,.]\d{1,2})?\s*(?:€|euros?)/i.exec(text);if(px)out.prix=+px[1];
+  // client
+  const cl=/(?:client(?:e)?|pour|nom|monsieur|madame|m\.|mme)\s*:?\s+([A-Za-zÀ-ÖØ-öø-ÿ-]{2,}(?:\s+[A-ZÀ-Ö][\wÀ-ÖØ-öø-ÿ-]*\.?)?)/i.exec(text);
+  if(cl){const n=cl[1].replace(/\s+(?:au|à|le|la|tel|téléphone|numéro|06|07)\b.*$/i,'');out.client=n.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}
+  // état visuel : les morceaux qui décrivent un défaut
+  const ER=/((?:(?!cass|écran|ecran|batterie)[^\s,.;]+\s+)?(?:rayure|rayé|rayée|rayures|fissure|fissuré|fissurée|fêlé|fêlée|enfoncé|enfoncée|tache|taché|tachée|usé|usée|abîmé|abîmée|bosse|choc|griffé|griffée|écaillé|écaillée|tordu|tordue|décollé|décollée|manque)(?:\s+(?!client|cliente|pour|nom|madame|monsieur|mme|tel|téléphone|\d)[^\s,.;]+){0,5})/gi;
+  const seg=[...text.matchAll(ER)].map(x=>x[1].trim());
+  if(seg.length)out.etat=seg.map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join('. ')+'.';
+  return out;
+}
+
 // ===== État =====
 let USER=null,A=null,GRID=[],REPS=[],loading=false;
 const app=()=>$('#app');
 function chrome(on){$('#tabs').hidden=!on;$('#shopName').textContent=A?A.nom:'';$('#tabListe').textContent=M.liste}
 
-function toRep(r,hist){return {id:r.id,num:r.numero,client:r.client,tel:r.telephone||'',model:r.article||'',panne:r.prestation||'',prix:+r.prix||0,cout:+r.cout||0,st:r.statut,date:r.created_at,hist:hist.length?hist:[{s:0,d:r.created_at}],tests:r.tests||[],etat:r.etat||'',imei:r.numero_serie||'',photo:r.photo_path,sig:r.signature_path,token:r.suivi_token}}
+function toRep(r,hist){return {id:r.id,num:r.numero,client:r.client,tel:r.telephone||'',model:r.article||'',panne:r.prestation||'',prix:+r.prix||0,cout:+r.cout||0,st:r.statut,date:r.created_at,hist:hist.length?hist:[{s:0,d:r.created_at}],tests:r.tests||[],etat:r.etat||'',imei:r.numero_serie||'',photo:r.photo_path,sig:r.signature_path,token:r.suivi_token,relance:r.relance_at||null}}
 
 async function loadAll(){
   if(loading)return;loading=true;
@@ -344,6 +381,8 @@ function bindList(){
 function vNew(){
   const ms=models();
   return `<h1>Nouvelle prise en charge</h1>
+  ${SR?`<div class="card mic-card"><button type="button" class="btn btn-p btn-block" id="mic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="mic-l">Dicter la prise en charge</span></button>
+    <p class="note" style="margin:0" id="mic-n">Dis par exemple : « ${esc(M.grid[0]?M.grid[0][0]:M.item)}, ${esc(M.grid[0]?M.grid[0][1].toLowerCase():M.panne.toLowerCase())}, ${M===METIERS.phone?'rayure au dos':'abîmé sur le côté'}, client Sofia, 06 12 34 56 78 »</p></div>`:''}
   <form id="nf" class="list" novalidate>
   <div class="card"><h2>Client</h2>
     <div class="grid2"><label class="f">Nom<input id="n-client" placeholder="Prénom N."></label>
@@ -383,6 +422,27 @@ function bindNew(){
   const upd=()=>{const g=cur();if(g)pr.value=g.prix;mg2()};
   const fill=()=>{const l=pannesFor(m.value).map(g=>g.panne);$('#dl-panne').innerHTML=[...new Set(l.length?l:allPannes())].map(x=>`<option value="${esc(x)}"></option>`).join('');upd()};
   m.oninput=fill;p.oninput=upd;pr.oninput=mg2;fill();
+  const mic=$('#mic');
+  if(mic){let rec=null,on=false;
+    const stop=()=>{on=false;$('#mic-l').textContent='Dicter la prise en charge';mic.classList.remove('rec')};
+    mic.onclick=()=>{
+      if(on&&rec){rec.stop();return}
+      rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+      let finalTxt='';
+      rec.onresult=ev=>{let txt='';for(const r of ev.results)txt+=r[0].transcript;$('#mic-n').textContent='« '+txt+' »';if(ev.results[ev.results.length-1].isFinal)finalTxt=txt};
+      rec.onerror=ev=>{stop();toast(ev.error==='not-allowed'||ev.error==='service-not-allowed'?'Autorise le micro pour ce site dans Chrome, puis réessaie.':ev.error==='no-speech'?'Je n\'ai rien entendu. Réessaie en parlant près du téléphone.':'Dictée impossible, remplis la fiche à la main.')};
+      rec.onend=()=>{stop();if(!finalTxt)return;
+        const o=parseDictee(finalTxt,models(),allPannes());const got=[];
+        if(o.model){m.value=o.model;fill();got.push(M.item.toLowerCase())}
+        if(o.panne){p.value=o.panne;upd();got.push(M.panne.toLowerCase())}
+        if(o.prix){pr.value=o.prix;mg2();got.push('prix')}
+        if(o.client){$('#n-client').value=o.client;got.push('client')}
+        if(o.tel){$('#n-tel').value=o.tel;got.push('téléphone')}
+        if(o.etat){const e=$('#n-etat');e.value=(e.value?e.value+' ':'')+o.etat;got.push('état')}
+        $('#mic-n').innerHTML='« '+esc(finalTxt)+' »<br><b>'+(got.length?'Rempli : '+got.join(', ')+'. Vérifie et complète.':'Rien reconnu, réessaie ou remplis à la main.')+'</b>';
+        if(!o.prix&&o.model&&o.panne&&!cur())pr.focus()};
+      try{rec.start();on=true;$('#mic-l').textContent='J\'écoute… appuie pour terminer';mic.classList.add('rec')}catch(e){stop();toast('Dictée impossible sur ce navigateur')}
+    }}
   $('#n-photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);photoData=c.toDataURL('image/jpeg',.75);const pv=$('#n-prev');pv.src=photoData;pv.hidden=false};im.src=rd.result};rd.readAsDataURL(f)};
   const cv=$('#sig'),ctx=cv.getContext('2d');
   const r0=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=r0.width*dpr;cv.height=r0.height*dpr;ctx.scale(dpr,dpr);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.strokeStyle=getComputedStyle(document.body).color;
@@ -404,7 +464,9 @@ function bindNew(){
     const {data,error}=await sb.from('fiches').insert(row).select().single();
     if(error){busy(b,false);fail(error,"La fiche n'a pas été enregistrée. Vérifie ta connexion et réessaie.");return}
     REPS.unshift(toRep(data,[{s:0,d:data.created_at}]));
-    toast(lost?'Fiche enregistrée, mais la photo ou la signature n\'a pas pu être envoyée':'Prise en charge enregistrée');
+    if(!g&&row.prix>0){const t={atelier_id:A.id,article:row.article,prestation:row.prestation,prix:row.prix,cout:0};
+      sb.from('tarifs').insert(t).select().single().then(({data:d})=>{if(d)GRID.push({id:d.id,model:d.article,panne:d.prestation,prix:+d.prix||0,cout:0})})}
+    toast(!g&&row.prix>0&&!lost?'Enregistré. Ce tarif est ajouté à ta grille.':lost?'Fiche enregistrée, mais la photo ou la signature n\'a pas pu être envoyée':'Prise en charge enregistrée');
     location.hash='fiche-'+id;
   };
 }
@@ -418,6 +480,14 @@ function devisHtml(r){
   <div class="l tot"><span>Total TTC</span><span class="mono">${eur(r.prix)}</span></div>
   <div class="small muted">${tva} · Garantie ${A.garantie_mois} mois</div></div>`;
 }
+const daysSince=d=>Math.floor((Date.now()-new Date(d))/864e5);
+const readyDate=r=>{const h=r.hist.filter(x=>x.s===4).pop();return h?h.d:r.date};
+const toRelance=()=>REPS.filter(r=>r.st===4&&daysSince(readyDate(r))>=7&&(!r.relance||daysSince(r.relance)>=7)).sort((a,b)=>new Date(readyDate(a))-new Date(readyDate(b)));
+const prenom=r=>r.client.split(' ')[0];
+function relanceMsg(r){return `Bonjour ${prenom(r)}, petit rappel : votre ${r.model} (${r.panne.toLowerCase()}) est prêt depuis ${daysSince(readyDate(r))} jours chez ${A.nom}. Vous pouvez passer le récupérer quand vous voulez. Montant : ${eur(r.prix)}. Suivi : ${trackUrl(r.token)}`}
+function avisMsg(r){return `Merci ${prenom(r)} d'avoir fait confiance à ${A.nom} ! Si vous êtes satisfait(e), un petit avis Google nous aide énormément : ${A.avis_url}`}
+const wa=(r,msg)=>`https://wa.me/${waNum(r.tel)}?text=${encodeURIComponent(msg)}`;
+async function markRelance(r){const now=new Date().toISOString();r.relance=now;const {error}=await sb.from('fiches').update({relance_at:now}).eq('id',r.id);if(error)fail(error,'Relance non notée. As-tu ajouté les 2 lignes dans Supabase ?');setTimeout(render,600)}
 function readyMsg(r){const pr=r.client.split(' ')[0];return `Bonjour ${pr}, c'est prêt : ${r.model} (${r.panne.toLowerCase()}). Vous pouvez passer le récupérer chez ${A.nom}. Montant : ${eur(r.prix)}. Suivi : ${trackUrl(r.token)}`}
 function vFiche(id){
   const r=REPS.find(x=>x.id===id);if(!r)return `<div class="card">Fiche introuvable. <a class="link" href="#reparations">Retour à la liste</a></div>`;
@@ -434,7 +504,13 @@ function vFiche(id){
   ${r.st===4?`<div class="card"><h2>Prévenir le client</h2>
     <textarea id="msg" class="small" readonly>${esc(readyMsg(r))}</textarea>
     <div class="grid2"><a class="btn btn-g" target="_blank" rel="noopener" href="https://wa.me/${waNum(r.tel)}?text=${encodeURIComponent(readyMsg(r))}">Ouvrir WhatsApp</a><button class="btn" id="cpmsg">Copier le message</button></div>
-    <p class="note" style="margin:0">Le message s'ouvre prêt à envoyer. Vérifie qu'il est bien parti dans WhatsApp.</p></div>`:''}
+    <p class="note" style="margin:0">Le message s'ouvre prêt à envoyer. Vérifie qu'il est bien parti dans WhatsApp.</p>
+    ${daysSince(readyDate(r))>=7?`<div class="relance-box"><b>Prêt depuis ${daysSince(readyDate(r))} jours.</b> ${r.relance?`Dernière relance le ${fd(r.relance)}.`:'Pas encore relancé.'}
+      <a class="btn btn-s" data-relance="${r.id}" target="_blank" rel="noopener" href="${wa(r,relanceMsg(r))}">Relancer sur WhatsApp</a></div>`:''}</div>`:''}
+  ${r.st===5?`<div class="card"><h2>Demander un avis Google</h2>
+    ${A.avis_url?`<p class="small muted" style="margin:0">Les clients satisfaits laissent rarement un avis si on ne leur demande pas. Envoie-lui le lien maintenant.</p>
+      <div class="grid2"><a class="btn btn-g" target="_blank" rel="noopener" href="${wa(r,avisMsg(r))}">Demander sur WhatsApp</a><button class="btn" id="cpavis">Copier le message</button></div>`
+    :`<p class="small muted" style="margin:0">Ajoute ton lien d'avis Google dans <a class="link" href="#tarifs">Réglages</a> pour demander un avis en un clic.</p>`}</div>`:''}
   <div class="card"><h2>Client</h2><div class="row between"><span>${esc(r.client)}</span><span class="mono" style="user-select:all">${esc(r.tel||'—')}</span></div>
     <div class="grid2"><a class="btn btn-s" href="#suivi-${r.token}">Voir la page de suivi</a><button class="btn btn-s" id="cplink">Copier le lien de suivi</button></div></div>
   <div class="card"><h2>Devis accepté</h2>${devisHtml(r)}
@@ -461,6 +537,8 @@ function bindFiche(id){
   $('#st').onchange=e=>setSt(r,+e.target.value,e.target);
   $('#cplink').onclick=()=>copy(trackUrl(r.token));
   const c=$('#cpmsg');if(c)c.onclick=()=>copy(readyMsg(r),$('#msg'));
+  const ca=$('#cpavis');if(ca)ca.onclick=()=>copy(avisMsg(r));
+  document.querySelectorAll('[data-relance]').forEach(a=>a.addEventListener('click',()=>markRelance(r)));
   document.querySelectorAll('img[data-path]').forEach(async im=>{
     const {data,error}=await sb.storage.from(BUCKET).createSignedUrl(im.dataset.path,3600);
     if(error){im.replaceWith(Object.assign(document.createElement('div'),{className:'small muted',textContent:'Image indisponible.'}));return}
@@ -499,7 +577,7 @@ function vTableau(){
   const enc=REPS.filter(r=>r.st<4).length,prets=REPS.filter(r=>r.st===4);
   const byS=ST.map((s,i)=>REPS.filter(r=>r.st===i).length),mx=Math.max(1,...byS);
   const pc={};REPS.forEach(r=>pc[r.panne]=(pc[r.panne]||0)+1);const top=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,5),mx2=Math.max(1,...top.map(t=>t[1]));
-  const mois=now.toLocaleDateString('fr-FR',{month:'long'});
+  const mois=now.toLocaleDateString('fr-FR',{month:'long'});const rl=toRelance();
   return `<h1>Tableau de bord</h1>
   <div class="kpis">
     <div class="kpi"><b>${enc}</b><span>${M.liste} en cours</span></div>
@@ -508,10 +586,15 @@ function vTableau(){
     <div class="kpi"><b>${ca?Math.round((ca-cout)/ca*100):0} %</b><span>Marge en ${mois} (${eur(ca-cout)})</span></div>
   </div>
   ${prets.length?`<div class="card"><h2>À prévenir ou à rendre</h2><div class="list">${prets.map(r=>`<button class="item" data-open="${r.id}"><span class="t">${esc(r.client)}</span><span class="p">${eur(r.prix)}</span><span class="d">${esc(r.model)} · ${esc(r.panne)}</span><span>${chip(4)}</span></button>`).join('')}</div></div>`:''}
+  ${rl.length?`<div class="card"><div class="row between"><h2>À relancer</h2><span class="chip s-piece">${rl.length}</span></div>
+    <p class="small muted" style="margin:0">Prêts depuis 7 jours ou plus, et pas relancés cette semaine.</p>
+    <div>${rl.map(r=>`<div class="rl"><button class="link rl-t" data-open="${r.id}"><b>${esc(r.client)}</b><span class="small muted">${esc(r.model)} · prêt depuis ${daysSince(readyDate(r))} j${r.relance?` · relancé le ${fd(r.relance)}`:''}</span></button>
+      <a class="btn btn-s btn-g" data-relance="${r.id}" target="_blank" rel="noopener" href="${wa(r,relanceMsg(r))}">Relancer</a></div>`).join('')}</div></div>`:''}
   <div class="card"><h2>Fiches par statut</h2><div class="bars">${ST.map((s,i)=>`<div class="bar"><span>${s}</span><span class="tr"><span class="fl" style="display:block;width:${byS[i]/mx*100}%"></span></span><span class="n">${byS[i]}</span></div>`).join('')}</div></div>
   ${top.length?`<div class="card"><h2>${M.pannes} les plus fréquentes</h2><div class="bars">${top.map(([p,n])=>`<div class="bar"><span>${esc(p)}</span><span class="tr"><span class="fl" style="display:block;width:${n/mx2*100}%"></span></span><span class="n">${n}</span></div>`).join('')}</div></div>`:''}`;
 }
-function bindTableau(){document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>location.hash='fiche-'+b.dataset.open)}
+function bindTableau(){document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>location.hash='fiche-'+b.dataset.open);
+  document.querySelectorAll('[data-relance]').forEach(a=>a.addEventListener('click',()=>{const r=REPS.find(x=>x.id===a.dataset.relance);if(r)markRelance(r)}))}
 
 // ===== Réglages : tarifs + atelier =====
 let outAsk=false;
@@ -528,7 +611,9 @@ function vTarifs(){
     <label class="f">Métier<select id="s-met">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}" ${k===A.metier?'selected':''}>${esc(v.nom)}</option>`).join('')}</select></label>
     <div class="grid2"><label class="f">Téléphone<input id="s-tel" value="${esc(A.telephone||'')}"></label>
     <label class="f">Garantie (mois)<input id="s-gar" type="number" value="${A.garantie_mois}"></label></div>
-    <label class="f">TVA<select id="s-tva"><option value="micro" ${A.tva==='micro'?'selected':''}>Micro-entreprise (TVA non applicable)</option><option value="tva" ${A.tva==='tva'?'selected':''}>TVA 20 % incluse</option></select></label></div>
+    <label class="f">TVA<select id="s-tva"><option value="micro" ${A.tva==='micro'?'selected':''}>Micro-entreprise (TVA non applicable)</option><option value="tva" ${A.tva==='tva'?'selected':''}>TVA 20 % incluse</option></select></label>
+    <label class="f">Lien d'avis Google<input id="s-avis" inputmode="url" placeholder="https://g.page/r/…" value="${esc(A.avis_url||'')}"></label>
+    <p class="note" style="margin:0">Pour le trouver : cherche ton atelier sur Google Maps, puis « Demander des avis » dans ta fiche d'établissement, et copie le lien.</p></div>
   <div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
     ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}</div>`;
 }
@@ -549,6 +634,7 @@ function bindTarifs(){
   $('#s-tel').oninput=e=>{A.telephone=e.target.value;saveShop({telephone:A.telephone})};
   $('#s-gar').oninput=e=>{A.garantie_mois=+e.target.value||0;saveShop({garantie_mois:A.garantie_mois})};
   $('#s-tva').onchange=e=>{A.tva=e.target.value;saveShop({tva:A.tva})};
+  $('#s-avis').oninput=e=>{A.avis_url=e.target.value.trim();saveShop({avis_url:A.avis_url||null})};
   $('#s-met').onchange=e=>{A.metier=e.target.value;setM(A.metier);saveShop({metier:A.metier});render();toast('Métier : '+M.nom)};
   const o=$('#out');if(o)o.onclick=()=>{outAsk=true;render()};
   const n=$('#out-no');if(n)n.onclick=()=>{outAsk=false;render()};
