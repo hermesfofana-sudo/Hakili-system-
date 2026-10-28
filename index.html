@@ -128,6 +128,11 @@ nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-ra
 .err{color:var(--crit);font-weight:600;font-size:14px}
 .btn[disabled]{opacity:.55;cursor:wait}
 .out{color:var(--crit)}
+#demobar{background:var(--warn-soft);border-top:1px solid var(--line)}
+.db{display:flex;align-items:center;gap:10px;padding-block:8px}
+.db-l{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--warn)}
+.db select{flex:1;padding:7px 10px;font-weight:700;background:var(--surface)}
+.demo-cta{gap:10px}
 .mic-card{gap:8px}
 #mic.rec{background:var(--crit);border-color:var(--crit)}
 @media (prefers-reduced-motion:no-preference){#mic.rec{animation:pulse 1.2s ease-in-out infinite}}
@@ -142,7 +147,7 @@ nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-ra
 <header><div class="wrap">
   <div class="logo" aria-hidden="true">H</div>
   <div class="brand"><b>Hakili Atelier</b><span id="shopName"></span></div>
-</div></header>
+</div><div id="demobar" hidden></div></header>
 
 <main><div class="wrap" id="app"><div class="loading">Chargement…</div></div></main>
 
@@ -159,7 +164,7 @@ nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-ra
 const SUPA_URL='https://bscetltuebekpopvvdeb.supabase.co';
 const SUPA_KEY='sb_publishable_L6mmQsB-9uWamr5DxVWijQ_T-Ngho5u';
 const BUCKET='depots';
-const sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+let sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 const SC=['s-recu','s-diag','s-piece','s-rep','s-pret','s-rendu'];
 const METIERS={
@@ -234,7 +239,7 @@ const pannesFor=m=>GRID.filter(g=>norm(g.model)===norm(m)||isAll(g.model));
 const allPannes=()=>[...new Set(GRID.map(g=>g.panne))];
 const models=()=>[...new Set(GRID.map(g=>g.model).filter(m=>!isAll(m)))];
 const waNum=t=>{let n=String(t||'').replace(/\D/g,'');if(n.startsWith('0'))n='33'+n.slice(1);return n};
-const trackUrl=tok=>location.origin+location.pathname+'#suivi-'+tok;
+const trackUrl=tok=>location.origin+location.pathname+(DEMO?'?demo='+DEMO:'')+'#suivi-'+tok;
 function busy(b,on,txt){if(!b)return;if(on){b.dataset.t=b.textContent;b.disabled=true;b.textContent=txt||'Envoi…'}else{b.disabled=false;b.textContent=b.dataset.t||b.textContent}}
 const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}};
 
@@ -298,9 +303,9 @@ async function loadAll(){
 }
 
 // ===== Connexion =====
-function vLogin(msg){
+function vLogin(msg,startMode){
   chrome(false);
-  let mode='in';
+  let mode=startMode||'in';
   const draw=()=>{
   app().innerHTML=`<div class="card login"><h1>${mode==='in'?'Connexion à ton atelier':'Créer ton compte'}</h1>
     ${msg?`<p class="err" style="margin:0">${esc(msg)}</p>`:''}
@@ -308,7 +313,10 @@ function vLogin(msg){
       <label class="f">E-mail<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="atelier@exemple.fr"></label>
       <label class="f">Mot de passe<input id="l-pass" type="password" autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?'Ton mot de passe':'8 caractères minimum'}"></label>
       <button class="btn btn-p btn-block" type="submit" id="l-go">${mode==='in'?'Se connecter':'Créer mon compte'}</button></form>
-    <button class="link small" id="l-sw" style="align-self:flex-start">${mode==='in'?'Pas encore de compte ? Créer un compte':'Déjà un compte ? Se connecter'}</button></div>`;
+    <button class="link small" id="l-sw" style="align-self:flex-start">${mode==='in'?'Pas encore de compte ? Créer un compte':'Déjà un compte ? Se connecter'}</button></div>
+    <div class="card demo-cta"><h2>Découvrir sans compte</h2><p class="small muted" style="margin:0">Une démo complète avec des exemples, pour ton métier. Rien n'est enregistré.</p>
+    <button class="btn btn-block" id="l-demo">Voir la démo</button></div>`;
+  $('#l-demo').onclick=()=>enterDemo('phone');
   $('#l-sw').onclick=()=>{mode=mode==='in'?'up':'in';msg='';const m=$('#l-mail').value;draw();$('#l-mail').value=m};
   $('#lf').onsubmit=async e=>{e.preventDefault();
     const email=$('#l-mail').value.trim().toLowerCase(),password=$('#l-pass').value;
@@ -614,8 +622,8 @@ function vTarifs(){
     <label class="f">TVA<select id="s-tva"><option value="micro" ${A.tva==='micro'?'selected':''}>Micro-entreprise (TVA non applicable)</option><option value="tva" ${A.tva==='tva'?'selected':''}>TVA 20 % incluse</option></select></label>
     <label class="f">Lien d'avis Google<input id="s-avis" inputmode="url" placeholder="https://g.page/r/…" value="${esc(A.avis_url||'')}"></label>
     <p class="note" style="margin:0">Pour le trouver : cherche ton atelier sur Google Maps, puis « Demander des avis » dans ta fiche d'établissement, et copie le lien.</p></div>
-  <div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
-    ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}</div>`;
+  ${DEMO?`<div class="card"><h2>Démo</h2><p class="small muted" style="margin:0">Tu es dans la démo : les exemples sont fictifs et rien n'est enregistré.</p><button class="btn btn-p btn-block" id="demo-signup">Créer mon vrai compte</button></div>`:`<div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
+    ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}</div>`}`;
 }
 const saveRow=debounce(async g=>{const {error}=await sb.from('tarifs').update({article:g.model,prestation:g.panne,prix:g.prix,cout:g.cout}).eq('id',g.id);if(error)fail(error,'Tarif non enregistré')},700);
 const saveShop=debounce(async patch=>{const {error}=await sb.from('ateliers').update(patch).eq('id',A.id);if(error)fail(error,'Réglage non enregistré')},700);
@@ -636,9 +644,72 @@ function bindTarifs(){
   $('#s-tva').onchange=e=>{A.tva=e.target.value;saveShop({tva:A.tva})};
   $('#s-avis').oninput=e=>{A.avis_url=e.target.value.trim();saveShop({avis_url:A.avis_url||null})};
   $('#s-met').onchange=e=>{A.metier=e.target.value;setM(A.metier);saveShop({metier:A.metier});render();toast('Métier : '+M.nom)};
+  const ds=$('#demo-signup');if(ds)ds.onclick=()=>exitDemo(true);
   const o=$('#out');if(o)o.onclick=()=>{outAsk=true;render()};
   const n=$('#out-no');if(n)n.onclick=()=>{outAsk=false;render()};
   const y=$('#out-yes');if(y)y.onclick=()=>{outAsk=false;sb.auth.signOut()};
+}
+
+// ===== Mode démo : mêmes écrans, données locales, rien n'est enregistré =====
+let DEMO=null;
+function makeDemoClient(mid){
+  const MT=METIERS[mid],now=Date.now(),day=864e5,iso=t=>new Date(t).toISOString();
+  const D={ateliers:[],tarifs:[],fiches:[],historique:[]},files={};
+  const uid=()=>(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2));
+  let num=140;
+  D.ateliers.push({id:'demo',nom:MT.atelier,metier:mid,telephone:'05 56 00 00 00',garantie_mois:6,tva:'micro',avis_url:'https://g.page/r/exemple-avis',created_at:iso(now)});
+  MT.grid.forEach(([article,prestation,prix,cout])=>D.tarifs.push({id:uid(),atelier_id:'demo',article,prestation,prix,cout}));
+  const people=[['Lucas B.','06 11 22 33 44'],['Sofia R.','06 21 32 43 54'],['Camille D.','07 81 72 63 54'],['Jake T.','06 45 56 67 78'],['Inès M.','06 98 87 76 65'],['Emma G.','06 12 23 34 45'],['Yanis A.','07 23 34 45 56'],['Léa P.','06 34 45 56 67'],['Mamadou K.','06 56 67 78 89']];
+  MT.reps.forEach(([gi,st,k],i)=>{
+    const g=MT.grid[gi]||MT.grid[0];if(st===4)k=Math.max(k,10);
+    const id=uid(),t0=now-k*day-3600e3*(i+1);
+    D.fiches.push({id,atelier_id:'demo',numero:++num,client:people[i][0],telephone:people[i][1],article:g[0],prestation:g[1],prix:g[2],cout:g[3],statut:st,
+      tests:i===3?MT.tests.slice(2,5):MT.tests.slice(0,6),etat:i===4?MT.etatDemo:'',numero_serie:null,photo_path:null,signature_path:null,suivi_token:uid(),relance_at:null,created_at:iso(t0)});
+    const span=st===4?(k-9)*day:k*day*0.8;
+    for(let j=0;j<=st;j++)D.historique.push({fiche_id:id,statut:j,at:iso(Math.min(now-60e3,t0+(st?j*span/st:0)))});
+  });
+  const fill=(t,r)=>{r=Object.assign({},r);if(!r.id)r.id=uid();
+    if(t==='fiches'){r.numero=++num;r.suivi_token=r.suivi_token||uid();r.created_at=iso(Date.now());r.statut=r.statut||0;r.tests=r.tests||[];r.relance_at=null}
+    if(t==='tarifs'){r.prix=+r.prix||0;r.cout=+r.cout||0}return r};
+  const from=t=>{
+    let op='select',payload=null;const filters=[],orders=[];let lim=null;
+    const match=r=>filters.every(([k,v])=>r[k]===v);
+    const run=()=>{let out=[];const T=D[t];
+      if(op==='select'){out=T.filter(match);orders.slice().reverse().forEach(([k,d])=>out.sort((x,y)=>x[k]>y[k]?d:x[k]<y[k]?-d:0));if(lim)out=out.slice(0,lim)}
+      else if(op==='insert'){out=(Array.isArray(payload)?payload:[payload]).map(r=>fill(t,r));T.push(...out);
+        if(t==='fiches')out.forEach(f=>D.historique.push({fiche_id:f.id,statut:f.statut,at:f.created_at}))}
+      else if(op==='update'){T.filter(match).forEach(r=>{const old=r.statut;Object.assign(r,payload);
+        if(t==='fiches'&&'statut' in payload&&payload.statut!==old)D.historique.push({fiche_id:r.id,statut:r.statut,at:iso(Date.now())})});out=T.filter(match)}
+      else if(op==='delete'){D[t]=T.filter(r=>!match(r))}
+      return Promise.resolve({data:JSON.parse(JSON.stringify(out)),error:null})};
+    const q={select(){return q},eq(k,v){filters.push([k,v]);return q},order(k,o){orders.push([k,o&&o.ascending===false?-1:1]);return q},limit(n){lim=n;return q},
+      insert(r){op='insert';payload=r;return q},update(p){op='update';payload=p;return q},delete(){op='delete';return q},
+      maybeSingle(){return run().then(r=>({data:(r.data||[])[0]||null,error:null}))},single(){return run().then(r=>({data:(r.data||[])[0]||null,error:null}))},
+      then(a,b){return run().then(a,b)}};
+    return q};
+  return {from,
+    rpc:(fn,{p_token})=>{const f=D.fiches.find(x=>x.suivi_token===p_token);if(!f)return Promise.resolve({data:null,error:null});const a=D.ateliers[0];
+      return Promise.resolve({data:{atelier:a.nom,telephone:a.telephone,metier:a.metier,garantie_mois:a.garantie_mois,numero:f.numero,article:f.article,prestation:f.prestation,prix:f.prix,statut:f.statut,depose_le:f.created_at,
+        historique:D.historique.filter(h=>h.fiche_id===f.id)},error:null})},
+    storage:{from:()=>({upload:(p,blob)=>{files[p]=URL.createObjectURL(blob);return Promise.resolve({error:null})},
+      createSignedUrl:p=>Promise.resolve(files[p]?{data:{signedUrl:files[p]},error:null}:{data:null,error:{message:'absent'}})})},
+    auth:{signOut:()=>{exitDemo();return Promise.resolve({})}}};
+}
+async function enterDemo(mid){
+  if(!METIERS[mid])mid='phone';
+  DEMO=mid;sb=makeDemoClient(mid);USER={id:'demo',email:'démo'};A=null;filter='encours';q='';
+  const u=new URL(location.href);u.searchParams.set('demo',mid);if(!location.hash.startsWith('#suivi-'))u.hash='reparations';history.replaceState(null,'',u.toString());
+  demoBar();await loadAll();
+}
+function exitDemo(signup){
+  DEMO=null;sb=realSb;USER=null;A=null;GRID=[];REPS=[];
+  history.replaceState(null,'',location.pathname);demoBar();vLogin('',signup?'up':'in');
+}
+function demoBar(){
+  const b=$('#demobar');if(!b)return;b.hidden=!DEMO;if(!DEMO)return;
+  b.innerHTML=`<div class="wrap db"><span class="db-l">Démo</span><select id="db-met" aria-label="Métier de la démo">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}" ${k===DEMO?'selected':''}>${esc(v.nom)}</option>`).join('')}</select><button class="link small" id="db-out">Quitter</button></div>`;
+  $('#db-met').onchange=e=>{enterDemo(e.target.value);toast('Démo : '+METIERS[e.target.value].nom)};
+  $('#db-out').onclick=()=>exitDemo();
 }
 
 // ===== Routeur =====
@@ -664,13 +735,17 @@ let lastH=null;
 window.addEventListener('hashchange',()=>{route();if(lastH!==location.hash)window.scrollTo(0,0);lastH=location.hash});
 
 sb.auth.onAuthStateChange((ev,session)=>{
+  if(DEMO)return;
   const u=session?.user||null;
   if(u&&(!USER||USER.id!==u.id)){USER=u;A=null;if(!location.hash.startsWith('#suivi-'))setTimeout(()=>{cleanHash();loadAll()},0)}
   else if(!u&&USER){USER=null;A=null;GRID=[];REPS=[];if(!location.hash.startsWith('#suivi-')){location.hash='';vLogin()}}
 });
 function cleanHash(){if(/access_token|refresh_token|type=|error=/.test(location.hash))history.replaceState(null,'',location.pathname+'#reparations')}
 
+const realSb=sb;
 (async function boot(){
+  const dm=new URLSearchParams(location.search).get('demo');
+  if(dm!==null){const h=location.hash;await enterDemo(dm||'phone');if(h.startsWith('#suivi-'))await vSuivi(h.slice(7));return}
   const err=/error_description=([^&]+)/.exec(location.hash);
   const {data:{session}}=await sb.auth.getSession();
   if(location.hash.startsWith('#suivi-')){USER=session?.user||null;await vSuivi(location.hash.slice(7));return}
