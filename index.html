@@ -134,6 +134,9 @@ nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-ra
 .err{color:var(--crit);font-weight:600;font-size:14px}
 .btn[disabled]{opacity:.55;cursor:wait}
 .out{color:var(--crit)}
+.legal{gap:10px}
+.legal h2{font-size:16px;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:8px}
+.legal p{margin:0;line-height:1.55;font-size:14.5px}
 #demobar{background:var(--warn-soft);border-top:1px solid var(--line)}
 .db{display:flex;align-items:center;gap:10px;padding-block:8px}
 .db-l{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--warn)}
@@ -324,7 +327,7 @@ function vLogin(msg,startMode){
     ${mode==='in'?`<button class="link small" id="l-forgot" style="align-self:flex-start">Mot de passe oublié ?</button>`:''}
     <button class="link small" id="l-sw" style="align-self:flex-start">${mode==='in'?'Pas encore de compte ? Créer un compte':'Déjà un compte ? Se connecter'}</button></div>
     <div class="card demo-cta"><h2>Découvrir sans compte</h2><p class="small muted" style="margin:0">Une démo complète avec des exemples, pour votre métier. Rien n'est enregistré.</p>
-    <button class="btn btn-block" id="l-demo">Voir la démo</button></div>`;
+    <button class="btn btn-block" id="l-demo">Voir la démo</button></div>${legalLinks()}`;
   $('#l-demo').onclick=()=>enterDemo('phone');
   const fg=$('#l-forgot');if(fg)fg.onclick=()=>vForgot($('#l-mail').value.trim());
   $('#l-sw').onclick=()=>{mode=mode==='in'?'up':'in';msg='';const m=$('#l-mail').value;draw();$('#l-mail').value=m};
@@ -420,7 +423,7 @@ function vPaywall(){
     <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
       <li>Prise en charge à la voix et devis automatique</li><li>Clients prévenus sur WhatsApp, suivi en ligne</li><li>Relances des objets oubliés et demandes d'avis Google</li></ul>
     <a class="btn btn-p btn-block" href="${url}" target="_blank" rel="noopener">Payer et activer</a>
-    <p class="note" style="margin:0">Paiement sécurisé par Stripe. Votre compte est activé dès la réception du paiement, sous 24 h au plus tard.</p>
+    <p class="note" style="margin:0">En vous abonnant, vous acceptez les <a class="link small" href="#cgv">conditions générales de vente</a>. Paiement sécurisé par Stripe. Votre compte est activé dès la réception du paiement, sous 24 h au plus tard.</p>
     <button class="btn btn-block" id="pw-check">J'ai payé, vérifier mon accès</button>
     <button class="link small" id="pw-out" style="align-self:flex-start">Se déconnecter</button></div>`;
   $('#pw-check').onclick=async()=>{const b=$('#pw-check');busy(b,true,'Vérification…');A=null;await loadAll();if(A&&A.actif===false)toast("Pas encore activé. Réessayez dans quelques minutes.")};
@@ -688,7 +691,7 @@ function vTarifs(){
     <label class="f">Lien d'avis Google<input id="s-avis" inputmode="url" placeholder="https://g.page/r/…" value="${esc(A.avis_url||'')}"></label>
     <p class="note" style="margin:0">Pour le trouver : cherchez votre atelier sur Google Maps, puis « Demander des avis » dans votre fiche d'établissement, et copie le lien.</p></div>
   ${DEMO?`<div class="card"><h2>Démo</h2><p class="small muted" style="margin:0">Vous êtes dans la démo : les exemples sont fictifs et rien n'est enregistré. Le vrai compte coûte 25 € par mois, sans engagement.</p><button class="btn btn-p btn-block" id="demo-signup">Créer mon vrai compte</button></div>`:`<div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
-    ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}</div>`}`;
+    ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}<p class="small muted" style="margin:0">Une question ? ${LEGAL_ID.email}</p></div>`}${legalLinks()}`;
 }
 const saveRow=debounce(async g=>{const {error}=await sb.from('tarifs').update({article:g.model,prestation:g.panne,prix:g.prix,cout:g.cout}).eq('id',g.id);if(error)fail(error,'Tarif non enregistré')},700);
 const saveShop=debounce(async patch=>{const {error}=await sb.from('ateliers').update(patch).eq('id',A.id);if(error)fail(error,'Réglage non enregistré')},700);
@@ -778,6 +781,69 @@ function demoBar(){
   $('#db-go').onclick=()=>exitDemo(true);
 }
 
+// ===== Pages légales =====
+const LEGAL_ID={nom:'Hermès Fofana',siren:'952 762 128',adresse:'9 rue Camille Pelletan, 33150 Cenon, France',email:'hermesfofana@gmail.com',maj:'29 octobre 2026'};
+const legalLinks=()=>`<p class="note" style="margin:0;text-align:center"><a class="link small" href="#mentions">Mentions légales</a> · <a class="link small" href="#cgv">CGV</a> · <a class="link small" href="#confidentialite">Confidentialité</a></p>`;
+const LEGAL={
+mentions:{t:'Mentions légales',h:()=>`
+<h2>Éditeur</h2>
+<p>Le service Hakili Atelier est édité par <b>${LEGAL_ID.nom}</b>, entrepreneur individuel (micro-entreprise).</p>
+<p>SIREN : ${LEGAL_ID.siren}<br>Adresse : ${LEGAL_ID.adresse}<br>E-mail : ${LEGAL_ID.email}</p>
+<p>TVA non applicable, article 293 B du Code général des impôts.</p>
+<p>Directeur de la publication : ${LEGAL_ID.nom}.</p>
+<h2>Hébergement</h2>
+<p>Site : GitHub Pages, service de GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+<p>Données des comptes et des ateliers : Supabase, Inc., serveurs situés dans l'Union européenne (Irlande).</p>
+<p>Paiements : Stripe Payments Europe, Ltd., Dublin, Irlande.</p>
+<h2>Propriété intellectuelle</h2>
+<p>L'application, son nom, son logo et ses contenus appartiennent à ${LEGAL_ID.nom}. Toute reproduction sans autorisation est interdite.</p>`},
+cgv:{t:'Conditions générales de vente',h:()=>`
+<p>Dernière mise à jour : ${LEGAL_ID.maj}.</p>
+<h2>1. Objet</h2>
+<p>Les présentes conditions encadrent l'abonnement au service Hakili Atelier, une application en ligne de gestion des réparations (prises en charge, devis, suivi, messages aux clients), éditée par ${LEGAL_ID.nom} (le « Prestataire »).</p>
+<h2>2. Clients concernés</h2>
+<p>Le service est réservé aux professionnels (artisans, commerçants, entreprises) qui l'utilisent pour leur activité. Le droit de rétractation des consommateurs ne s'applique donc pas.</p>
+<h2>3. Prix et paiement</h2>
+<p>L'abonnement coûte <b>25 € par mois</b>. TVA non applicable, article 293 B du CGI. Le paiement est mensuel, par carte bancaire, via Stripe. Il est prélevé à la souscription puis chaque mois à la même date. Une facture est disponible pour chaque paiement.</p>
+<h2>4. Accès au service</h2>
+<p>Le compte est activé après réception du premier paiement, sous 24 heures au plus tard. En cas d'échec de paiement, l'accès peut être suspendu jusqu'à régularisation.</p>
+<h2>5. Durée et résiliation</h2>
+<p>L'abonnement est sans engagement. Le Client peut le résilier à tout moment, par simple e-mail à ${LEGAL_ID.email}. La résiliation prend effet à la fin de la période déjà payée. Aucun remboursement au prorata n'est dû pour le mois en cours.</p>
+<h2>6. Données du Client</h2>
+<p>Le Client reste propriétaire des données qu'il saisit. Il peut demander leur export ou leur suppression à tout moment. Après résiliation, elles sont supprimées dans un délai de 30 jours, sauf demande d'export préalable.</p>
+<h2>7. Obligations du Client</h2>
+<p>Le Client est responsable des informations qu'il enregistre et des messages qu'il envoie à ses propres clients. Il s'engage à disposer de leur accord pour les contacter et à respecter la réglementation sur les données personnelles.</p>
+<h2>8. Disponibilité et responsabilité</h2>
+<p>Le Prestataire fait ses meilleurs efforts pour assurer l'accès au service, sans garantie d'une disponibilité permanente. Le service dépend d'une connexion internet et de services tiers (hébergement, paiement, WhatsApp). La responsabilité du Prestataire est limitée au montant payé par le Client au cours des 12 derniers mois.</p>
+<h2>9. Modification des conditions</h2>
+<p>Le Prestataire peut modifier ces conditions ou le prix. Le Client en est informé au moins 30 jours à l'avance et peut résilier avant leur entrée en vigueur.</p>
+<h2>10. Droit applicable</h2>
+<p>Ces conditions sont soumises au droit français. En cas de litige, les parties cherchent d'abord une solution amiable. À défaut, les tribunaux compétents de Bordeaux sont saisis.</p>`},
+confidentialite:{t:'Politique de confidentialité',h:()=>`
+<p>Dernière mise à jour : ${LEGAL_ID.maj}.</p>
+<h2>Qui est responsable ?</h2>
+<p>${LEGAL_ID.nom}, ${LEGAL_ID.adresse}, contact : ${LEGAL_ID.email}.</p>
+<h2>Les données de votre compte</h2>
+<p>Pour créer et gérer votre compte, nous traitons votre e-mail, les informations de votre atelier (nom, téléphone, métier, réglages) et les informations liées à votre abonnement. Le paiement est traité par Stripe : nous ne voyons jamais votre numéro de carte. Ces données servent uniquement à fournir le service et à le facturer.</p>
+<h2>Les données de vos clients</h2>
+<p>Les informations que vous enregistrez sur vos propres clients (nom, téléphone, objet déposé, photos, signature) sont traitées pour votre compte. Pour ces données, vous êtes le responsable du traitement et Hakili Atelier agit comme sous-traitant, au sens de l'article 28 du RGPD. Nous les utilisons seulement pour faire fonctionner le service, sans jamais les vendre, les louer ni les utiliser pour de la publicité.</p>
+<h2>Où sont-elles hébergées ?</h2>
+<p>Les données sont hébergées par Supabase, sur des serveurs situés dans l'Union européenne (Irlande). Les pages de suivi envoyées à vos clients n'affichent que l'objet, la prestation, le statut et le prix, jamais leurs coordonnées.</p>
+<h2>Combien de temps ?</h2>
+<p>Les données sont conservées tant que votre compte est actif, puis supprimées dans les 30 jours qui suivent la résiliation. Les factures sont conservées 10 ans, comme l'exige la loi.</p>
+<h2>Services tiers</h2>
+<p>Le site charge des polices de caractères depuis Google Fonts et une bibliothèque technique depuis jsDelivr, ce qui transmet votre adresse IP à ces services. Aucun cookie publicitaire ni outil de mesure d'audience n'est utilisé. Seule la connexion à votre compte est mémorisée sur votre appareil.</p>
+<h2>Vos droits</h2>
+<p>Vous pouvez demander l'accès, la correction, l'export ou la suppression de vos données en écrivant à ${LEGAL_ID.email}. Nous répondons sous un mois. Vous pouvez aussi adresser une réclamation à la CNIL (cnil.fr).</p>`}
+};
+function vLegal(k){
+  const L=LEGAL[k];chrome(false);if(A&&!DEMO)$('#shopName').textContent=A.nom;
+  app().innerHTML=`<button class="link small" data-back style="align-self:flex-start">← Retour</button>
+  <div class="card legal"><h1>${L.t}</h1>${L.h()}</div>${legalLinks()}`;
+  $('[data-back]').onclick=()=>{if(history.length>1)history.back();else location.hash=USER?'reparations':''};
+  window.scrollTo(0,0);
+}
+
 // ===== Routeur =====
 function render(){
   const h=location.hash.slice(1)||'reparations',el=app();
@@ -792,6 +858,7 @@ function render(){
 }
 async function route(){
   const h=location.hash.slice(1);
+  if(LEGAL[h]){vLegal(h);return}
   if(h.startsWith('suivi-')){await vSuivi(h.slice(6));return}
   if(!USER){vLogin();return}
   if(!A){await loadAll();return}
@@ -805,7 +872,7 @@ sb.auth.onAuthStateChange((ev,session)=>{
   if(DEMO)return;
   if(ev==='PASSWORD_RECOVERY'||RECOVERY){RECOVERY=false;USER=session?.user||null;setTimeout(()=>{history.replaceState(null,'',location.pathname);vNewPass()},0);return}
   const u=session?.user||null;
-  if(u&&(!USER||USER.id!==u.id)){USER=u;A=null;if(!location.hash.startsWith('#suivi-'))setTimeout(()=>{cleanHash();loadAll()},0)}
+  if(u&&(!USER||USER.id!==u.id)){USER=u;A=null;if(!location.hash.startsWith('#suivi-')&&!LEGAL[location.hash.slice(1)])setTimeout(()=>{cleanHash();loadAll()},0)}
   else if(!u&&USER){USER=null;A=null;GRID=[];REPS=[];if(!location.hash.startsWith('#suivi-')){location.hash='';vLogin()}}
 });
 function cleanHash(){if(/access_token|refresh_token|type=|error=/.test(location.hash))history.replaceState(null,'',location.pathname+'#reparations')}
@@ -817,6 +884,7 @@ const realSb=sb;
   const err=/error_description=([^&]+)/.exec(location.hash);
   const {data:{session}}=await sb.auth.getSession();
   if(RECOVERY){RECOVERY=false;USER=session?.user||null;history.replaceState(null,'',location.pathname);vNewPass();return}
+  if(LEGAL[location.hash.slice(1)]){USER=session?.user||null;vLegal(location.hash.slice(1));return}
   if(location.hash.startsWith('#suivi-')){USER=session?.user||null;await vSuivi(location.hash.slice(7));return}
   if(err&&!session){cleanHash();vLogin(decodeURIComponent(err[1].replace(/\+/g,' ')));return}
   if(!session){vLogin();return}
