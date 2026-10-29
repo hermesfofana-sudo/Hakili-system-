@@ -170,13 +170,14 @@ nav.tabs a.new span.ic{background:var(--accent);color:var(--on-accent);border-ra
 const SUPA_URL='https://bscetltuebekpopvvdeb.supabase.co';
 const SUPA_KEY='sb_publishable_L6mmQsB-9uWamr5DxVWijQ_T-Ngho5u';
 const BUCKET='depots';
+let RECOVERY=/type=recovery/.test(location.hash);
 let sb=supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 const SC=['s-recu','s-diag','s-piece','s-rep','s-pret','s-rendu'];
 const METIERS={
   phone:{nom:'Téléphonie',atelier:'Atelier Démo',item:'Modèle',panne:'Panne',pannes:'Pannes',all:'Tous modèles',liste:'Réparations',
     serial:'IMEI (facultatif)',serialShort:'IMEI',serialPh:'35 000000 000000 0',code:true,photo:"Photo de l'appareil",
-    etatPh:'Ex. rayure coque arrière, coin gauche enfoncé…',testsTitre:"Tests à l'entrée",testsNote:'Coche ce qui fonctionne au moment du dépôt.',ko:'Ne fonctionnait pas / non testé',okL:'Fonctionnait',
+    etatPh:'Ex. rayure coque arrière, coin gauche enfoncé…',testsTitre:"Tests à l'entrée",testsNote:'Cochez ce qui fonctionne au moment du dépôt.',ko:'Ne fonctionnait pas / non testé',okL:'Fonctionnait',
     st:['Reçu','Diagnostic','Attente pièce','En réparation','Prêt','Rendu'],
     tests:['Écran tactile','Face ID / Touch ID','Caméras','Haut-parleur','Micro','Charge','Réseau','Wi-Fi / Bluetooth'],
     grid:[["iPhone XR", "Écran", 79, 36], ["iPhone XR", "Batterie", 39, 12], ["iPhone XR", "Connecteur de charge", 49, 12], ["iPhone 11", "Écran", 89, 40], ["iPhone 11", "Batterie", 49, 15], ["iPhone 11", "Connecteur de charge", 59, 15], ["iPhone 11 Pro", "Écran", 119, 54], ["iPhone 11 Pro", "Batterie", 55, 16], ["iPhone 11 Pro", "Connecteur de charge", 59, 15], ["iPhone 12", "Écran", 109, 49], ["iPhone 12", "Batterie", 59, 18], ["iPhone 12", "Connecteur de charge", 69, 17], ["iPhone 12 Pro", "Écran", 119, 54], ["iPhone 12 Pro", "Batterie", 59, 18], ["iPhone 12 Pro", "Connecteur de charge", 69, 17], ["iPhone 13", "Écran", 129, 58], ["iPhone 13", "Batterie", 69, 21], ["iPhone 13", "Connecteur de charge", 69, 17], ["iPhone 13 Pro", "Écran", 189, 85], ["iPhone 13 Pro", "Batterie", 69, 21], ["iPhone 13 Pro", "Connecteur de charge", 79, 20], ["iPhone 14", "Écran", 149, 67], ["iPhone 14", "Batterie", 79, 24], ["iPhone 14", "Connecteur de charge", 79, 20], ["iPhone 14 Pro", "Écran", 249, 112], ["iPhone 14 Pro", "Batterie", 79, 24], ["iPhone 14 Pro", "Connecteur de charge", 89, 22], ["iPhone 15", "Écran", 189, 85], ["iPhone 15", "Batterie", 89, 27], ["iPhone 15", "Connecteur de charge", 89, 22], ["iPhone 15 Pro", "Écran", 299, 135], ["iPhone 15 Pro", "Batterie", 89, 27], ["iPhone 15 Pro", "Connecteur de charge", 99, 25], ["iPhone 16", "Écran", 229, 103], ["iPhone 16", "Batterie", 99, 30], ["iPhone 16", "Connecteur de charge", 99, 25], ["iPhone SE (2022)", "Écran", 69, 31], ["iPhone SE (2022)", "Batterie", 49, 15], ["iPhone SE (2022)", "Connecteur de charge", 59, 15], ["Galaxy S21", "Écran", 149, 67], ["Galaxy S21", "Batterie", 59, 18], ["Galaxy S21", "Connecteur de charge", 59, 15], ["Galaxy S22", "Écran", 169, 76], ["Galaxy S22", "Batterie", 59, 18], ["Galaxy S22", "Connecteur de charge", 59, 15], ["Galaxy S23", "Écran", 189, 85], ["Galaxy S23", "Batterie", 69, 21], ["Galaxy S23", "Connecteur de charge", 69, 17], ["Galaxy S24", "Écran", 219, 99], ["Galaxy S24", "Batterie", 69, 21], ["Galaxy S24", "Connecteur de charge", 69, 17], ["Galaxy A14", "Écran", 69, 31], ["Galaxy A14", "Batterie", 49, 15], ["Galaxy A14", "Connecteur de charge", 39, 10], ["Galaxy A34", "Écran", 99, 45], ["Galaxy A34", "Batterie", 49, 15], ["Galaxy A34", "Connecteur de charge", 49, 12], ["Galaxy A52", "Écran", 99, 45], ["Galaxy A52", "Batterie", 49, 15], ["Galaxy A52", "Connecteur de charge", 49, 12], ["Galaxy A54", "Écran", 109, 49], ["Galaxy A54", "Batterie", 49, 15], ["Galaxy A54", "Connecteur de charge", 49, 12], ["Galaxy A55", "Écran", 119, 54], ["Galaxy A55", "Batterie", 55, 16], ["Galaxy A55", "Connecteur de charge", 49, 12], ["Redmi Note 11", "Écran", 69, 31], ["Redmi Note 11", "Batterie", 39, 12], ["Redmi Note 11", "Connecteur de charge", 39, 10], ["Redmi Note 12", "Écran", 79, 36], ["Redmi Note 12", "Batterie", 39, 12], ["Redmi Note 12", "Connecteur de charge", 39, 10], ["Redmi Note 13", "Écran", 89, 40], ["Redmi Note 13", "Batterie", 45, 14], ["Redmi Note 13", "Connecteur de charge", 39, 10], ["Pixel 7", "Écran", 139, 63], ["Pixel 7", "Batterie", 59, 18], ["Pixel 7", "Connecteur de charge", 59, 15], ["Pixel 8", "Écran", 159, 72], ["Pixel 8", "Batterie", 69, 21], ["Pixel 8", "Connecteur de charge", 59, 15], ["Huawei P30", "Écran", 99, 45], ["Huawei P30", "Batterie", 49, 15], ["Huawei P30", "Connecteur de charge", 49, 12], ["Oppo A78", "Écran", 79, 36], ["Oppo A78", "Batterie", 45, 14], ["Oppo A78", "Connecteur de charge", 39, 10], ["iPhone 13", "Caméra arrière", 99, 40], ["iPhone 14", "Caméra arrière", 99, 40], ["iPhone 15", "Caméra arrière", 99, 40], ["Galaxy S23", "Caméra arrière", 99, 40], ["iPhone 12", "Vitre arrière", 89, 25], ["iPhone 13", "Vitre arrière", 89, 25], ["iPhone 14", "Vitre arrière", 89, 25], ["Tous modèles", "Diagnostic", 0, 0], ["Tous modèles", "Désoxydation", 49, 5], ["Tous modèles", "Transfert de données", 29, 0], ["Tous modèles", "Verre trempé posé", 15, 2]],
@@ -184,7 +185,7 @@ const METIERS={
     etatDemo:'Rayure en bas à gauche de la coque, déjà présente au dépôt.'},
   cordo:{nom:'Cordonnerie',atelier:'Cordonnerie Démo',item:'Article',panne:'Prestation',pannes:'Prestations',all:'Tous articles',liste:'Réparations',
     serial:null,code:false,photo:"Photo de l'article",
-    etatPh:'Ex. cuir griffé côté gauche, semelle usée au talon…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui est en bon état au dépôt.',ko:'Abîmé ou non vérifié',okL:'En bon état',
+    etatPh:'Ex. cuir griffé côté gauche, semelle usée au talon…',testsTitre:"Contrôle à l'entrée",testsNote:'Cochez ce qui est en bon état au dépôt.',ko:'Abîmé ou non vérifié',okL:'En bon état',
     st:['Reçu','Diagnostic','Attente fourniture','En atelier','Prêt','Rendu'],
     tests:['Semelle','Talons','Coutures','Cuir / tige','Doublure','Lacets / œillets','Fermeture','Teinte'],
     grid:[['Chaussures homme','Patins de talon',18,4],['Chaussures homme','Ressemelage cuir',65,18],['Chaussures femme','Talons aiguille',20,4],['Chaussures femme','Patins caoutchouc',25,6],['Bottes','Fermeture éclair',35,8],['Sneakers','Nettoyage complet',35,6],['Sac cuir','Couture poignée',30,5],['Tous articles','Teinture',40,8],['Clés','Double de clé',6,1]],
@@ -192,7 +193,7 @@ const METIERS={
     etatDemo:'Cuir griffé sur le côté gauche, déjà présent au dépôt.'},
   retouche:{nom:'Retouche & couture',atelier:'Retouches Démo',item:'Vêtement',panne:'Retouche',pannes:'Retouches',all:'Tous vêtements',liste:'Retouches',
     serial:null,code:false,photo:'Photo du vêtement',
-    etatPh:'Ex. petite tache au col, bouton manquant…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui est fait ou en bon état au dépôt.',ko:'À signaler',okL:'Vérifié',
+    etatPh:'Ex. petite tache au col, bouton manquant…',testsTitre:"Contrôle à l'entrée",testsNote:'Cochez ce qui est fait ou en bon état au dépôt.',ko:'À signaler',okL:'Vérifié',
     st:['Reçu','Essayage','Attente fourniture','En atelier','Prêt','Rendu'],
     tests:['Tissu intact','Doublure','Boutons','Fermeture','Coutures','Sans tache','Mesures prises','Essayage fait'],
     grid:[['Pantalon','Ourlet',12,1],['Pantalon','Taille à reprendre',18,1],['Jean','Ourlet d\'origine',15,1],['Robe','Raccourcir',25,2],['Veste','Raccourcir les manches',28,2],['Manteau','Fermeture éclair',35,8],['Chemise','Cintrer',20,1],['Robe de mariée','Retouche complète',180,10],['Tous vêtements','Bouton recousu',3,0]],
@@ -200,7 +201,7 @@ const METIERS={
     etatDemo:'Petite tache au col, signalée au dépôt.'},
   velo:{nom:'Vélo & trottinette',atelier:'Atelier Vélo Démo',item:'Vélo',panne:'Intervention',pannes:'Interventions',all:'Tous vélos',liste:'Réparations',
     serial:'N° Bicycode ou de cadre (facultatif)',serialShort:'Bicycode',serialPh:'00000000000000',code:false,photo:'Photo du vélo',
-    etatPh:'Ex. garde-boue arrière fendu, peinture écaillée…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui fonctionne au moment du dépôt.',ko:'Défaillant ou non testé',okL:'Fonctionnait',
+    etatPh:'Ex. garde-boue arrière fendu, peinture écaillée…',testsTitre:"Contrôle à l'entrée",testsNote:'Cochez ce qui fonctionne au moment du dépôt.',ko:'Défaillant ou non testé',okL:'Fonctionnait',
     st:['Reçu','Diagnostic','Attente pièce','En réparation','Prêt','Rendu'],
     tests:['Freins','Dérailleur','Chaîne','Pneus','Roues','Éclairage','Batterie (VAE)','Direction'],
     grid:[['Vélo de ville','Crevaison',15,4],['Vélo de ville','Révision complète',69,10],['Vélo de ville','Plaquettes de frein',25,10],['Vélo de route','Câbles et gaines',30,8],['VAE','Révision VAE',89,12],['VAE','Diagnostic batterie',35,0],['Trottinette','Crevaison',25,8],['Tous vélos','Réglage dérailleur',15,0]],
@@ -208,7 +209,7 @@ const METIERS={
     etatDemo:'Garde-boue arrière fendu, déjà présent au dépôt.'},
   horlo:{nom:'Horlogerie',atelier:'Horlogerie Démo',item:'Montre',panne:'Intervention',pannes:'Interventions',all:'Toutes montres',liste:'Réparations',
     serial:'N° de boîtier (facultatif)',serialShort:'Boîtier',serialPh:'N° gravé au dos',code:false,photo:'Photo de la montre',
-    etatPh:'Ex. verre rayé à 3 h, bracelet usé…',testsTitre:"Contrôle à l'entrée",testsNote:'Coche ce qui est en bon état au dépôt.',ko:'Abîmé ou non vérifié',okL:'En bon état',
+    etatPh:'Ex. verre rayé à 3 h, bracelet usé…',testsTitre:"Contrôle à l'entrée",testsNote:'Cochez ce qui est en bon état au dépôt.',ko:'Abîmé ou non vérifié',okL:'En bon état',
     st:['Reçu','Diagnostic','Attente pièce','En révision','Prête','Rendue'],
     tests:['Marche','Couronne','Verre','Aiguilles','Lunette','Bracelet','Fermoir','Étanchéité testée'],
     grid:[['Montre quartz','Pile',15,2],['Montre quartz','Verre',45,12],['Montre automatique','Révision complète',250,40],['Montre automatique','Réglage de marche',60,0],['Bracelet cuir','Remplacement',35,12],['Toutes montres','Test d\'étanchéité',30,3],['Pendule','Révision',180,20]],
@@ -216,7 +217,7 @@ const METIERS={
     etatDemo:'Verre rayé à 3 h, déjà présent au dépôt.'},
   info:{nom:'Informatique & consoles',atelier:'Atelier Info Démo',item:'Appareil',panne:'Panne',pannes:'Pannes',all:'Tous appareils',liste:'Réparations',
     serial:'N° de série (facultatif)',serialShort:'N° de série',serialPh:'Sous l\'appareil',code:true,photo:"Photo de l'appareil",
-    etatPh:'Ex. coque fendue près de la charnière…',testsTitre:"Tests à l'entrée",testsNote:'Coche ce qui fonctionne au moment du dépôt.',ko:'Ne fonctionnait pas / non testé',okL:'Fonctionnait',
+    etatPh:'Ex. coque fendue près de la charnière…',testsTitre:"Tests à l'entrée",testsNote:'Cochez ce qui fonctionne au moment du dépôt.',ko:'Ne fonctionnait pas / non testé',okL:'Fonctionnait',
     st:['Reçu','Diagnostic','Attente pièce','En réparation','Prêt','Rendu'],
     tests:['Démarre','Écran','Clavier','Pavé tactile','Charge','Wi-Fi','Ports USB','Son'],
     grid:[['PC portable','Écran',129,60],['PC portable','Nettoyage et pâte thermique',49,3],['MacBook Air','Batterie',149,70],['PS5','Port HDMI',89,15],['Switch','Joystick',39,8],['Manette','Joystick',35,6],['Tous appareils','Diagnostic',0,0],['Tous appareils','Réinstallation système',59,0]],
@@ -236,8 +237,8 @@ const fdt=d=>new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hou
 const sid=n=>'R-'+String(n||0).padStart(4,'0');
 let toastT;
 function toast(m){let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
-function fail(e,msg){console.error(e);toast(msg||'Problème de connexion. Réessaie dans un instant.')}
-async function copy(txt,el){try{await navigator.clipboard.writeText(txt);toast('Copié')}catch(e){if(el){el.focus();el.select&&el.select()}toast('Sélectionne le texte et copie-le')}}
+function fail(e,msg){console.error(e);toast(msg||'Problème de connexion. Réessayez dans un instant.')}
+async function copy(txt,el){try{await navigator.clipboard.writeText(txt);toast('Copié')}catch(e){if(el){el.focus();el.select&&el.select()}toast('Sélectionnez le texte et copiez-le')}}
 const chip=st=>`<span class="chip ${SC[st]}">${ST[st]}</span>`;
 const isAll=m=>m===M.all;
 const norm=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,' ');
@@ -287,7 +288,7 @@ function toRep(r,hist){return {id:r.id,num:r.numero,client:r.client,tel:r.teleph
 
 async function loadAll(){
   if(loading)return;loading=true;
-  chrome(false);app().innerHTML='<div class="loading">Chargement de ton atelier…</div>';
+  chrome(false);app().innerHTML='<div class="loading">Chargement de votre atelier…</div>';
   try{
     const {data:at,error}=await sb.from('ateliers').select('*').limit(1).maybeSingle();
     if(error)throw error;
@@ -305,7 +306,7 @@ async function loadAll(){
     REPS=f.data.map(r=>toRep(r,H[r.id]||[]));
     loading=false;render();
   }catch(e){loading=false;console.error(e);
-    app().innerHTML=`<div class="card"><h1>Connexion impossible</h1><p class="err">${esc(e.message||e)}</p><p class="small muted" style="margin:0">Vérifie que les tables Supabase sont bien créées, puis recharge la page.</p><button class="btn" id="retry">Réessayer</button></div>`;
+    app().innerHTML=`<div class="card"><h1>Connexion impossible</h1><p class="err">${esc(e.message||e)}</p><p class="small muted" style="margin:0">Vérifiez votre connexion internet, puis rechargez la page.</p><button class="btn" id="retry">Réessayer</button></div>`;
     $('#retry').onclick=loadAll}
 }
 
@@ -314,20 +315,22 @@ function vLogin(msg,startMode){
   chrome(false);
   let mode=startMode||'in';
   const draw=()=>{
-  app().innerHTML=`<div class="card login"><h1>${mode==='in'?'Connexion à ton atelier':'Créer ton compte'}</h1>
+  app().innerHTML=`<div class="card login"><h1>${mode==='in'?'Connexion à votre atelier':'Créer votre compte'}</h1>
     ${msg?`<p class="err" style="margin:0">${esc(msg)}</p>`:''}
     <form id="lf" class="list" novalidate>
       <label class="f">E-mail<input id="l-mail" type="email" autocomplete="email" inputmode="email" placeholder="atelier@exemple.fr"></label>
-      <label class="f">Mot de passe<input id="l-pass" type="password" autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?'Ton mot de passe':'8 caractères minimum'}"></label>
+      <label class="f">Mot de passe<input id="l-pass" type="password" autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?'Votre mot de passe':'8 caractères minimum'}"></label>
       <button class="btn btn-p btn-block" type="submit" id="l-go">${mode==='in'?'Se connecter':'Créer mon compte'}</button></form>
+    ${mode==='in'?`<button class="link small" id="l-forgot" style="align-self:flex-start">Mot de passe oublié ?</button>`:''}
     <button class="link small" id="l-sw" style="align-self:flex-start">${mode==='in'?'Pas encore de compte ? Créer un compte':'Déjà un compte ? Se connecter'}</button></div>
-    <div class="card demo-cta"><h2>Découvrir sans compte</h2><p class="small muted" style="margin:0">Une démo complète avec des exemples, pour ton métier. Rien n'est enregistré.</p>
+    <div class="card demo-cta"><h2>Découvrir sans compte</h2><p class="small muted" style="margin:0">Une démo complète avec des exemples, pour votre métier. Rien n'est enregistré.</p>
     <button class="btn btn-block" id="l-demo">Voir la démo</button></div>`;
   $('#l-demo').onclick=()=>enterDemo('phone');
+  const fg=$('#l-forgot');if(fg)fg.onclick=()=>vForgot($('#l-mail').value.trim());
   $('#l-sw').onclick=()=>{mode=mode==='in'?'up':'in';msg='';const m=$('#l-mail').value;draw();$('#l-mail').value=m};
   $('#lf').onsubmit=async e=>{e.preventDefault();
     const email=$('#l-mail').value.trim().toLowerCase(),password=$('#l-pass').value;
-    if(!/^\S+@\S+\.\S+$/.test(email)){toast('Entre une adresse e-mail valide');return}
+    if(!/^\S+@\S+\.\S+$/.test(email)){toast('Indiquez une adresse e-mail valide');return}
     if(password.length<8){toast('Le mot de passe doit faire au moins 8 caractères');return}
     const b=$('#l-go');busy(b,true,mode==='in'?'Connexion…':'Création…');
     if(mode==='in'){
@@ -337,18 +340,54 @@ function vLogin(msg,startMode){
     }else{
       const {data,error}=await sb.auth.signUp({email,password});
       busy(b,false);
-      if(error){fail(error,/registered|exists/i.test(error.message)?'Ce compte existe déjà. Connecte-toi.':'Création impossible : '+error.message);return}
-      if(!data.session){toast('Compte créé. Valide l\'e-mail reçu, puis connecte-toi.');mode='in';draw();$('#l-mail').value=email}
+      if(error){fail(error,/registered|exists/i.test(error.message)?'Ce compte existe déjà. Connectez-vous.':'Création impossible : '+error.message);return}
+      if(!data.session){toast('Compte créé. Validez l\'e-mail reçu, puis connectez-vous.');mode='in';draw();$('#l-mail').value=email}
     }
   };
   };
   draw();
 }
 
+// ===== Mot de passe oublié =====
+function vForgot(mail){
+  chrome(false);
+  app().innerHTML=`<div class="card login"><h1>Mot de passe oublié</h1>
+    <p class="small muted" style="margin:0">Indiquez votre e-mail : vous recevrez un lien pour choisir un nouveau mot de passe.</p>
+    <form id="ff" class="list" novalidate><label class="f">E-mail<input id="f-mail" type="email" autocomplete="email" inputmode="email" value="${esc(mail||'')}" placeholder="atelier@exemple.fr"></label>
+    <button class="btn btn-p btn-block" type="submit" id="f-go">Recevoir le lien</button></form>
+    <p id="f-ok" style="margin:0" hidden>Si un compte existe pour cette adresse, le lien vient d'être envoyé. Pensez à regarder dans les spams.</p>
+    <button class="link small" id="f-back" style="align-self:flex-start">← Retour à la connexion</button></div>`;
+  $('#f-back').onclick=()=>vLogin();
+  $('#ff').onsubmit=async e=>{e.preventDefault();const email=$('#f-mail').value.trim().toLowerCase();
+    if(!/^\S+@\S+\.\S+$/.test(email)){toast('Indiquez une adresse e-mail valide');return}
+    const b=$('#f-go');busy(b,true);
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+    busy(b,false);
+    if(error){fail(error,error.status===429?'Trop de demandes. Patientez quelques minutes avant de réessayer.':'Envoi impossible : '+error.message);return}
+    $('#f-ok').hidden=false;b.disabled=true};
+}
+function vNewPass(){
+  chrome(false);
+  if(!USER){vLogin('Ce lien a expiré. Demandez un nouveau lien de réinitialisation.');return}
+  app().innerHTML=`<div class="card login"><h1>Nouveau mot de passe</h1>
+    <p class="small muted" style="margin:0">Compte : <b>${esc(USER.email||'')}</b></p>
+    <form id="np" class="list" novalidate><label class="f">Nouveau mot de passe<input id="np-1" type="password" autocomplete="new-password" placeholder="8 caractères minimum"></label>
+    <label class="f">Confirmez le mot de passe<input id="np-2" type="password" autocomplete="new-password"></label>
+    <button class="btn btn-p btn-block" type="submit" id="np-go">Enregistrer</button></form></div>`;
+  $('#np').onsubmit=async e=>{e.preventDefault();const p1=$('#np-1').value,p2=$('#np-2').value;
+    if(p1.length<8){toast('Le mot de passe doit faire au moins 8 caractères');return}
+    if(p1!==p2){toast('Les deux mots de passe sont différents');return}
+    const b=$('#np-go');busy(b,true,'Enregistrement…');
+    const {error}=await sb.auth.updateUser({password:p1});
+    busy(b,false);
+    if(error){fail(error,'Mot de passe non enregistré : '+error.message);return}
+    toast('Mot de passe enregistré');A=null;location.hash='reparations';await loadAll()};
+}
+
 // ===== Première configuration =====
 function vOnboard(){
   chrome(false);
-  app().innerHTML=`<h1>Crée ton atelier</h1><p class="small muted" style="margin:0">Une minute. La grille de prix de ton métier est préremplie, tu l'ajustes ensuite.</p>
+  app().innerHTML=`<h1>Créez votre atelier</h1><p class="small muted" style="margin:0">Une minute. La grille de prix de votre métier est préremplie, vous l'ajusterez ensuite.</p>
   <form id="of" class="card" novalidate>
     <label class="f">Nom affiché aux clients<input id="o-nom" placeholder="Ex. Cordonnerie du Centre"></label>
     <label class="f">Métier<select id="o-met">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}">${esc(v.nom)}</option>`).join('')}</select></label>
@@ -358,7 +397,7 @@ function vOnboard(){
     <button class="btn btn-p btn-block" type="submit" id="o-go">Créer mon atelier</button></form>
   <button class="link small" id="o-out" style="align-self:flex-start">Se déconnecter</button>`;
   $('#o-out').onclick=()=>sb.auth.signOut();
-  $('#of').onsubmit=async e=>{e.preventDefault();const nom=$('#o-nom').value.trim();if(!nom){toast("Indique le nom de l'atelier");return}
+  $('#of').onsubmit=async e=>{e.preventDefault();const nom=$('#o-nom').value.trim();if(!nom){toast("Indiquez le nom de l'atelier");return}
     const met=$('#o-met').value,b=$('#o-go');busy(b,true,'Création…');
     try{
       const {data:at,error}=await sb.from('ateliers').insert({nom,metier:met,telephone:$('#o-tel').value.trim(),garantie_mois:+$('#o-gar').value||6,tva:$('#o-tva').value}).select().single();
@@ -402,7 +441,7 @@ function vList(){
   <div class="list">${reps.length?reps.map(r=>`<button class="item" data-open="${r.id}">
     <span class="t">${esc(r.client)} <span class="muted mono small">${sid(r.num)}</span></span><span class="p">${eur(r.prix)}</span>
     <span class="d">${esc(r.model)} · ${esc(r.panne)} · ${fd(r.date)}</span><span>${chip(r.st)}</span></button>`).join('')
-    :`<div class="card muted">${REPS.length?'Aucune fiche dans ce filtre.':'Aucune fiche pour l\'instant. Appuie sur <b>Nouvelle</b> pour enregistrer ton premier dépôt.'}</div>`}</div>`;
+    :`<div class="card muted">${REPS.length?'Aucune fiche dans ce filtre.':'Aucune fiche pour l\'instant. Appuyez sur <b>Nouvelle</b> pour enregistrer votre premier dépôt.'}</div>`}</div>`;
 }
 function bindList(){
   const qi=$('#q');qi.oninput=()=>{q=qi.value;const p=qi.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
@@ -414,8 +453,9 @@ function bindList(){
 function vNew(){
   const ms=models();
   return `<h1>Nouvelle prise en charge</h1>
+  ${!SR?`<p class="note" style="margin:0">Astuce : pour dicter, appuyez sur le micro de votre clavier dans chaque champ.</p>`:''}
   ${SR?`<div class="card mic-card"><button type="button" class="btn btn-p btn-block" id="mic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="mic-l">Dicter la prise en charge</span></button>
-    <p class="note" style="margin:0" id="mic-n">Dis par exemple : « ${esc(M.grid[0]?M.grid[0][0]:M.item)}, ${esc(M.grid[0]?M.grid[0][1].toLowerCase():M.panne.toLowerCase())}, ${M===METIERS.phone?'rayure au dos':'abîmé sur le côté'}, client Sofia, 06 12 34 56 78 »</p></div>`:''}
+    <p class="note" style="margin:0" id="mic-n">Dites par exemple : « ${esc(M.grid[0]?M.grid[0][0]:M.item)}, ${esc(M.grid[0]?M.grid[0][1].toLowerCase():M.panne.toLowerCase())}, ${M===METIERS.phone?'rayure au dos':'abîmé sur le côté'}, client Sofia, 06 12 34 56 78 »</p></div>`:''}
   <form id="nf" class="list" novalidate>
   <div class="card"><h2>Client</h2>
     <div class="grid2"><label class="f">Nom<input id="n-client" placeholder="Prénom N."></label>
@@ -424,7 +464,7 @@ function vNew(){
     <div class="grid2"><label class="f">${M.item}<input id="n-model" list="dl-model" autocomplete="off" placeholder="Tape ou choisis"></label>
     <label class="f">${M.panne}<input id="n-panne" list="dl-panne" autocomplete="off" placeholder="Tape ou choisis"></label></div>
     <datalist id="dl-model">${ms.map(m=>`<option value="${esc(m)}"></option>`).join('')}</datalist><datalist id="dl-panne"></datalist>
-    <p class="note" style="margin:0" id="n-hint">Pas dans la liste ? Tape-le, puis indique le prix.</p>
+    <p class="note" style="margin:0" id="n-hint">Pas dans la liste ? Tapez-le, puis indiquez le prix.</p>
     ${M.serial?`<label class="f">${M.serial}<input id="n-imei" class="mono" placeholder="${esc(M.serialPh)}"></label>`:''}
     <div class="row between"><span class="muted small">Prix du devis (modifiable)</span><span class="small muted" id="n-marge"></span></div>
     <div class="row"><input id="n-prix" type="number" inputmode="decimal" class="price" style="max-width:160px" aria-label="Prix du devis"><span class="price">€</span></div></div>
@@ -463,7 +503,7 @@ function bindNew(){
       rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
       let finalTxt='';
       rec.onresult=ev=>{let txt='';for(const r of ev.results)txt+=r[0].transcript;$('#mic-n').textContent='« '+txt+' »';if(ev.results[ev.results.length-1].isFinal)finalTxt=txt};
-      rec.onerror=ev=>{stop();toast(ev.error==='not-allowed'||ev.error==='service-not-allowed'?'Autorise le micro pour ce site dans Chrome, puis réessaie.':ev.error==='no-speech'?'Je n\'ai rien entendu. Réessaie en parlant près du téléphone.':'Dictée impossible, remplis la fiche à la main.')};
+      rec.onerror=ev=>{stop();toast(ev.error==='not-allowed'||ev.error==='service-not-allowed'?'Autorisez le micro pour ce site dans votre navigateur, puis réessayez.':ev.error==='no-speech'?'Je n\'ai rien entendu. Réessayez en parlant près du téléphone.':'Dictée impossible, remplissez la fiche à la main.')};
       rec.onend=()=>{stop();if(!finalTxt)return;
         const o=parseDictee(finalTxt,models(),allPannes());const got=[];
         if(o.model){m.value=o.model;fill();got.push(M.item.toLowerCase())}
@@ -472,9 +512,9 @@ function bindNew(){
         if(o.client){$('#n-client').value=o.client;got.push('client')}
         if(o.tel){$('#n-tel').value=o.tel;got.push('téléphone')}
         if(o.etat){const e=$('#n-etat');e.value=(e.value?e.value+' ':'')+o.etat;got.push('état')}
-        $('#mic-n').innerHTML='« '+esc(finalTxt)+' »<br><b>'+(got.length?'Rempli : '+got.join(', ')+'. Vérifie et complète.':'Rien reconnu, réessaie ou remplis à la main.')+'</b>';
+        $('#mic-n').innerHTML='« '+esc(finalTxt)+' »<br><b>'+(got.length?'Rempli : '+got.join(', ')+'. Vérifiez et complétez.':'Rien reconnu, réessayez ou remplissez à la main.')+'</b>';
         if(!o.prix&&o.model&&o.panne&&!cur())pr.focus()};
-      try{rec.start();on=true;$('#mic-l').textContent='J\'écoute… appuie pour terminer';mic.classList.add('rec')}catch(e){stop();toast('Dictée impossible sur ce navigateur')}
+      try{rec.start();on=true;$('#mic-l').textContent='J\'écoute… appuyez pour terminer';mic.classList.add('rec')}catch(e){stop();toast('Dictée impossible sur ce navigateur')}
     }}
   $('#n-photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);photoData=c.toDataURL('image/jpeg',.75);const pv=$('#n-prev');pv.src=photoData;pv.hidden=false};im.src=rd.result};rd.readAsDataURL(f)};
   const cv=$('#sig'),ctx=cv.getContext('2d');
@@ -485,8 +525,8 @@ function bindNew(){
   cv.onpointerup=cv.onpointercancel=()=>dn=false;
   $('#sig-clear').onclick=()=>{ctx.clearRect(0,0,cv.width,cv.height);sigDrawn=false};
   $('#nf').onsubmit=async e=>{e.preventDefault();
-    const client=$('#n-client').value.trim();if(!client){toast('Indique le nom du client');$('#n-client').focus();return}
-    if(!m.value.trim()||!p.value.trim()){toast(`Indique ${M.item.toLowerCase()} et ${M.panne.toLowerCase()}`);return}
+    const client=$('#n-client').value.trim();if(!client){toast('Indiquez le nom du client');$('#n-client').focus();return}
+    if(!m.value.trim()||!p.value.trim()){toast(`Indiquez ${M.item.toLowerCase()} et ${M.panne.toLowerCase()}`);return}
     if(!$('#n-ok').checked){toast('Le client doit accepter le devis');return}
     const b=$('#n-go');busy(b,true,'Enregistrement…');
     const id=crypto.randomUUID(),g=cur();let photo_path=null,signature_path=null,lost=false;
@@ -495,11 +535,11 @@ function bindNew(){
     const row={id,atelier_id:A.id,client,telephone:$('#n-tel').value.trim(),article:m.value.trim(),prestation:p.value.trim(),prix:+pr.value||0,cout:g?g.cout:0,statut:0,
       tests:TESTS.filter((t,i)=>$('#t'+i).checked),etat:$('#n-etat').value.trim(),numero_serie:$('#n-imei')?$('#n-imei').value.trim():null,photo_path,signature_path};
     const {data,error}=await sb.from('fiches').insert(row).select().single();
-    if(error){busy(b,false);fail(error,"La fiche n'a pas été enregistrée. Vérifie ta connexion et réessaie.");return}
+    if(error){busy(b,false);fail(error,"La fiche n'a pas été enregistrée. Vérifiez votre connexion et réessayez.");return}
     REPS.unshift(toRep(data,[{s:0,d:data.created_at}]));
     if(!g&&row.prix>0){const t={atelier_id:A.id,article:row.article,prestation:row.prestation,prix:row.prix,cout:0};
       sb.from('tarifs').insert(t).select().single().then(({data:d})=>{if(d)GRID.push({id:d.id,model:d.article,panne:d.prestation,prix:+d.prix||0,cout:0})})}
-    toast(!g&&row.prix>0&&!lost?'Enregistré. Ce tarif est ajouté à ta grille.':lost?'Fiche enregistrée, mais la photo ou la signature n\'a pas pu être envoyée':'Prise en charge enregistrée');
+    toast(!g&&row.prix>0&&!lost?'Enregistré. Ce tarif est ajouté à votre grille.':lost?'Fiche enregistrée, mais la photo ou la signature n\'a pas pu être envoyée':'Prise en charge enregistrée');
     location.hash='fiche-'+id;
   };
 }
@@ -520,7 +560,7 @@ const prenom=r=>r.client.split(' ')[0];
 function relanceMsg(r){return `Bonjour ${prenom(r)}, petit rappel : votre ${r.model} (${r.panne.toLowerCase()}) est prêt depuis ${daysSince(readyDate(r))} jours chez ${A.nom}. Vous pouvez passer le récupérer quand vous voulez. Montant : ${eur(r.prix)}. Suivi : ${trackUrl(r.token)}`}
 function avisMsg(r){return `Merci ${prenom(r)} d'avoir fait confiance à ${A.nom} ! Si vous êtes satisfait(e), un petit avis Google nous aide énormément : ${A.avis_url}`}
 const wa=(r,msg)=>`https://wa.me/${waNum(r.tel)}?text=${encodeURIComponent(msg)}`;
-async function markRelance(r){const now=new Date().toISOString();r.relance=now;const {error}=await sb.from('fiches').update({relance_at:now}).eq('id',r.id);if(error)fail(error,'Relance non notée. As-tu ajouté les 2 lignes dans Supabase ?');setTimeout(render,600)}
+async function markRelance(r){const now=new Date().toISOString();r.relance=now;const {error}=await sb.from('fiches').update({relance_at:now}).eq('id',r.id);if(error)fail(error,'Relance non notée. Réessayez dans un instant.');setTimeout(render,600)}
 function readyMsg(r){const pr=r.client.split(' ')[0];return `Bonjour ${pr}, c'est prêt : ${r.model} (${r.panne.toLowerCase()}). Vous pouvez passer le récupérer chez ${A.nom}. Montant : ${eur(r.prix)}. Suivi : ${trackUrl(r.token)}`}
 function vFiche(id){
   const r=REPS.find(x=>x.id===id);if(!r)return `<div class="card">Fiche introuvable. <a class="link" href="#reparations">Retour à la liste</a></div>`;
@@ -537,13 +577,13 @@ function vFiche(id){
   ${r.st===4?`<div class="card"><h2>Prévenir le client</h2>
     <textarea id="msg" class="small" readonly>${esc(readyMsg(r))}</textarea>
     <div class="grid2"><a class="btn btn-g" target="_blank" rel="noopener" href="https://wa.me/${waNum(r.tel)}?text=${encodeURIComponent(readyMsg(r))}">Ouvrir WhatsApp</a><button class="btn" id="cpmsg">Copier le message</button></div>
-    <p class="note" style="margin:0">Le message s'ouvre prêt à envoyer. Vérifie qu'il est bien parti dans WhatsApp.</p>
+    <p class="note" style="margin:0">Le message s'ouvre prêt à envoyer. Vérifiez qu'il est bien parti dans WhatsApp.</p>
     ${daysSince(readyDate(r))>=7?`<div class="relance-box"><b>Prêt depuis ${daysSince(readyDate(r))} jours.</b> ${r.relance?`Dernière relance le ${fd(r.relance)}.`:'Pas encore relancé.'}
       <a class="btn btn-s" data-relance="${r.id}" target="_blank" rel="noopener" href="${wa(r,relanceMsg(r))}">Relancer sur WhatsApp</a></div>`:''}</div>`:''}
   ${r.st===5?`<div class="card"><h2>Demander un avis Google</h2>
     ${A.avis_url?`<p class="small muted" style="margin:0">Les clients satisfaits laissent rarement un avis si on ne leur demande pas. Envoie-lui le lien maintenant.</p>
       <div class="grid2"><a class="btn btn-g" target="_blank" rel="noopener" href="${wa(r,avisMsg(r))}">Demander sur WhatsApp</a><button class="btn" id="cpavis">Copier le message</button></div>`
-    :`<p class="small muted" style="margin:0">Ajoute ton lien d'avis Google dans <a class="link" href="#tarifs">Réglages</a> pour demander un avis en un clic.</p>`}</div>`:''}
+    :`<p class="small muted" style="margin:0">Ajoutez votre lien d'avis Google dans <a class="link" href="#tarifs">Réglages</a> pour demander un avis en un clic.</p>`}</div>`:''}
   <div class="card"><h2>Client</h2><div class="row between"><span>${esc(r.client)}</span><span class="mono" style="user-select:all">${esc(r.tel||'—')}</span></div>
     <div class="grid2"><a class="btn btn-s" href="#suivi-${r.token}">Voir la page de suivi</a><button class="btn btn-s" id="cplink">Copier le lien de suivi</button></div></div>
   <div class="card"><h2>Devis accepté</h2>${devisHtml(r)}
@@ -560,7 +600,7 @@ function vFiche(id){
 async function setSt(r,s,el){
   if(el)el.disabled=true;
   const {error}=await sb.from('fiches').update({statut:s}).eq('id',r.id);
-  if(error){if(el)el.disabled=false;fail(error,"Statut non enregistré. Réessaie.");render();return}
+  if(error){if(el)el.disabled=false;fail(error,"Statut non enregistré. Réessayez.");render();return}
   r.st=s;r.hist.push({s,d:new Date().toISOString()});render();toast('Statut : '+ST[s]);
 }
 function bindFiche(id){
@@ -590,7 +630,7 @@ async function vSuivi(tok){
   if(!mine)$('#shopName').textContent=data.atelier;
   const st=data.statut;
   const txt=['Bien reçu à l\'atelier.','L\'artisan examine le travail à faire.','On attend une pièce ou une fourniture. On vous prévient dès réception.','C\'est entre les mains de l\'artisan.','C\'est prêt ! Vous pouvez venir le récupérer.','Rendu. Merci pour votre confiance.'][st];
-  app().innerHTML=`${mine?`<p class="note" style="margin:0">Ce que voit ton client · <button class="link small" data-back>retour à la fiche</button></p>`:''}
+  app().innerHTML=`${mine?`<p class="note" style="margin:0">Ce que voit votre client · <button class="link small" data-back>retour à la fiche</button></p>`:''}
   <div class="client-hero"><span class="small" style="opacity:.75">${esc(data.atelier)}</span><span class="big">${esc(data.article)}</span><span>${esc(data.prestation)} · n° <span class="mono">${sid(data.numero)}</span></span></div>
   <div class="card"><div class="row between"><b>${ST[st]}</b>${chip(st)}</div><div>${txt}</div>
     <div class="steps">${ST.map((s,i)=>`<i class="${i<=st?'on':''}"></i>`).join('')}</div>
@@ -646,8 +686,8 @@ function vTarifs(){
     <label class="f">Garantie (mois)<input id="s-gar" type="number" value="${A.garantie_mois}"></label></div>
     <label class="f">TVA<select id="s-tva"><option value="micro" ${A.tva==='micro'?'selected':''}>Micro-entreprise (TVA non applicable)</option><option value="tva" ${A.tva==='tva'?'selected':''}>TVA 20 % incluse</option></select></label>
     <label class="f">Lien d'avis Google<input id="s-avis" inputmode="url" placeholder="https://g.page/r/…" value="${esc(A.avis_url||'')}"></label>
-    <p class="note" style="margin:0">Pour le trouver : cherche ton atelier sur Google Maps, puis « Demander des avis » dans ta fiche d'établissement, et copie le lien.</p></div>
-  ${DEMO?`<div class="card"><h2>Démo</h2><p class="small muted" style="margin:0">Tu es dans la démo : les exemples sont fictifs et rien n'est enregistré. Le vrai compte, c'est 25 € par mois, sans engagement.</p><button class="btn btn-p btn-block" id="demo-signup">Créer mon vrai compte</button></div>`:`<div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
+    <p class="note" style="margin:0">Pour le trouver : cherchez votre atelier sur Google Maps, puis « Demander des avis » dans votre fiche d'établissement, et copie le lien.</p></div>
+  ${DEMO?`<div class="card"><h2>Démo</h2><p class="small muted" style="margin:0">Vous êtes dans la démo : les exemples sont fictifs et rien n'est enregistré. Le vrai compte coûte 25 € par mois, sans engagement.</p><button class="btn btn-p btn-block" id="demo-signup">Créer mon vrai compte</button></div>`:`<div class="card"><h2>Compte</h2><div class="small">Connecté avec <b>${esc(USER?.email||'')}</b></div>
     ${outAsk?`<div class="grid2"><button class="btn" id="out-no">Annuler</button><button class="btn out" id="out-yes">Se déconnecter</button></div>`:`<button class="btn" id="out">Se déconnecter</button>`}</div>`}`;
 }
 const saveRow=debounce(async g=>{const {error}=await sb.from('tarifs').update({article:g.model,prestation:g.panne,prix:g.prix,cout:g.cout}).eq('id',g.id);if(error)fail(error,'Tarif non enregistré')},700);
@@ -657,7 +697,7 @@ function bindTarifs(){
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{const g=GRID[+b.dataset.del];b.disabled=true;const {error}=await sb.from('tarifs').delete().eq('id',g.id);if(error){b.disabled=false;fail(error,'Suppression impossible');return}GRID.splice(GRID.indexOf(g),1);render()});
   $('#addstd').onclick=async()=>{const b=$('#addstd');const have=new Set(GRID.map(g=>norm(g.model)+'|'+norm(g.panne)));
     const rows=M.grid.filter(([a,p])=>!have.has(norm(a)+'|'+norm(p))).map(([article,prestation,prix,cout])=>({atelier_id:A.id,article,prestation,prix,cout}));
-    if(!rows.length){toast('Tous les modèles courants sont déjà dans ta grille');return}
+    if(!rows.length){toast('Tous les modèles courants sont déjà dans votre grille');return}
     busy(b,true,'Ajout…');const {data,error}=await sb.from('tarifs').insert(rows).select();busy(b,false);if(error){fail(error,'Ajout impossible');return}
     data.forEach(r=>GRID.push({id:r.id,model:r.article,panne:r.prestation,prix:+r.prix||0,cout:+r.cout||0}));toast(data.length+' lignes ajoutées');render()};
   $('#addrow').onclick=async()=>{const b=$('#addrow');busy(b,true,'Ajout…');const row={atelier_id:A.id,article:GRID[0]?GRID[0].model:M.item,prestation:'Nouvelle prestation',prix:0,cout:0};
@@ -732,9 +772,10 @@ function exitDemo(signup){
 }
 function demoBar(){
   const b=$('#demobar');if(!b)return;b.hidden=!DEMO;if(!DEMO)return;
-  b.innerHTML=`<div class="wrap db"><span class="db-l">Démo</span><select id="db-met" aria-label="Métier de la démo">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}" ${k===DEMO?'selected':''}>${esc(v.nom)}</option>`).join('')}</select><button class="link small" id="db-out">Quitter</button></div>`;
+  b.innerHTML=`<div class="wrap db"><span class="db-l">Démo</span><select id="db-met" aria-label="Métier de la démo">${Object.entries(METIERS).map(([k,v])=>`<option value="${k}" ${k===DEMO?'selected':''}>${esc(v.nom)}</option>`).join('')}</select><button class="btn btn-p btn-s" id="db-go">S'inscrire</button><button class="link small" id="db-out">Quitter</button></div>`;
   $('#db-met').onchange=e=>{enterDemo(e.target.value);toast('Démo : '+METIERS[e.target.value].nom)};
   $('#db-out').onclick=()=>exitDemo();
+  $('#db-go').onclick=()=>exitDemo(true);
 }
 
 // ===== Routeur =====
@@ -762,6 +803,7 @@ window.addEventListener('hashchange',()=>{route();if(lastH!==location.hash)windo
 
 sb.auth.onAuthStateChange((ev,session)=>{
   if(DEMO)return;
+  if(ev==='PASSWORD_RECOVERY'||RECOVERY){RECOVERY=false;USER=session?.user||null;setTimeout(()=>{history.replaceState(null,'',location.pathname);vNewPass()},0);return}
   const u=session?.user||null;
   if(u&&(!USER||USER.id!==u.id)){USER=u;A=null;if(!location.hash.startsWith('#suivi-'))setTimeout(()=>{cleanHash();loadAll()},0)}
   else if(!u&&USER){USER=null;A=null;GRID=[];REPS=[];if(!location.hash.startsWith('#suivi-')){location.hash='';vLogin()}}
@@ -774,6 +816,7 @@ const realSb=sb;
   if(dm!==null){const h=location.hash;await enterDemo(dm||'phone');if(h.startsWith('#suivi-'))await vSuivi(h.slice(7));return}
   const err=/error_description=([^&]+)/.exec(location.hash);
   const {data:{session}}=await sb.auth.getSession();
+  if(RECOVERY){RECOVERY=false;USER=session?.user||null;history.replaceState(null,'',location.pathname);vNewPass();return}
   if(location.hash.startsWith('#suivi-')){USER=session?.user||null;await vSuivi(location.hash.slice(7));return}
   if(err&&!session){cleanHash();vLogin(decodeURIComponent(err[1].replace(/\+/g,' ')));return}
   if(!session){vLogin();return}
