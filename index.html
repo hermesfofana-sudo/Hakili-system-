@@ -255,6 +255,7 @@ const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(
 
 // ===== Dictée : analyse de la phrase =====
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const flat=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[’']/g,' ').replace(/\s+/g,' ').trim();
 const PANNE_SYN=[[/\b(ecran|vitre avant|tactile|afficheur|ecran casse)\b/,'Écran'],[/\bbatterie\b/,'Batterie'],[/\b(connecteur|port de charge|charge (?:plus|pas|marche|ne)|ne charge|recharge|la charge)\b/,'Connecteur de charge'],
   [/\b(camera|appareil photo)\b/,'Caméra arrière'],[/\b(vitre arriere|dos casse|arriere casse)\b/,'Vitre arrière'],[/\b(oxyde|oxydation|tombe dans l eau|dans l eau|mouille)\b/,'Désoxydation'],[/\b(diagnostic|diag)\b/,'Diagnostic']];
@@ -456,9 +457,10 @@ function bindList(){
 function vNew(){
   const ms=models();
   return `<h1>Nouvelle prise en charge</h1>
-  ${!SR?`<p class="note" style="margin:0">Astuce : pour dicter, appuyez sur le micro de votre clavier dans chaque champ.</p>`:''}
-  ${SR?`<div class="card mic-card"><button type="button" class="btn btn-p btn-block" id="mic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="mic-l">Dicter la prise en charge</span></button>
-    <p class="note" style="margin:0" id="mic-n">Dites par exemple : « ${esc(M.grid[0]?M.grid[0][0]:M.item)}, ${esc(M.grid[0]?M.grid[0][1].toLowerCase():M.panne.toLowerCase())}, ${M===METIERS.phone?'rayure au dos':'abîmé sur le côté'}, client Sofia, 06 12 34 56 78 »</p></div>`:''}
+  <div class="card mic-card"><button type="button" class="btn btn-p btn-block" id="mic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="mic-l">Dicter la prise en charge</span></button>
+    <p class="note" style="margin:0" id="mic-n">Dites par exemple : « ${esc(M.grid[0]?M.grid[0][0]:M.item)}, ${esc(M.grid[0]?M.grid[0][1].toLowerCase():M.panne.toLowerCase())}, ${M===METIERS.phone?'rayure au dos':'abîmé sur le côté'}, client Sofia, 06 12 34 56 78 »</p>
+    <div id="kb" class="list" hidden><textarea id="kb-t" rows="3" placeholder="Appuyez ici, puis sur le micro du clavier et parlez"></textarea>
+    <button type="button" class="btn btn-p btn-block" id="kb-go">Remplir la fiche</button></div></div>
   <form id="nf" class="list" novalidate>
   <div class="card"><h2>Client</h2>
     <div class="grid2"><label class="f">Nom<input id="n-client" placeholder="Prénom N."></label>
@@ -501,13 +503,7 @@ function bindNew(){
   const mic=$('#mic');
   if(mic){let rec=null,on=false;
     const stop=()=>{on=false;$('#mic-l').textContent='Dicter la prise en charge';mic.classList.remove('rec')};
-    mic.onclick=()=>{
-      if(on&&rec){rec.stop();return}
-      rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
-      let finalTxt='';
-      rec.onresult=ev=>{let txt='';for(const r of ev.results)txt+=r[0].transcript;$('#mic-n').textContent='« '+txt+' »';if(ev.results[ev.results.length-1].isFinal)finalTxt=txt};
-      rec.onerror=ev=>{stop();toast(ev.error==='not-allowed'||ev.error==='service-not-allowed'?'Autorisez le micro pour ce site dans votre navigateur, puis réessayez.':ev.error==='no-speech'?'Je n\'ai rien entendu. Réessayez en parlant près du téléphone.':'Dictée impossible, remplissez la fiche à la main.')};
-      rec.onend=()=>{stop();if(!finalTxt)return;
+    const apply=finalTxt=>{
         const o=parseDictee(finalTxt,models(),allPannes());const got=[];
         if(o.model){m.value=o.model;fill();got.push(M.item.toLowerCase())}
         if(o.panne){p.value=o.panne;upd();got.push(M.panne.toLowerCase())}
@@ -517,7 +513,17 @@ function bindNew(){
         if(o.etat){const e=$('#n-etat');e.value=(e.value?e.value+' ':'')+o.etat;got.push('état')}
         $('#mic-n').innerHTML='« '+esc(finalTxt)+' »<br><b>'+(got.length?'Rempli : '+got.join(', ')+'. Vérifiez et complétez.':'Rien reconnu, réessayez ou remplissez à la main.')+'</b>';
         if(!o.prix&&o.model&&o.panne&&!cur())pr.focus()};
-      try{rec.start();on=true;$('#mic-l').textContent='J\'écoute… appuyez pour terminer';mic.classList.add('rec')}catch(e){stop();toast('Dictée impossible sur ce navigateur')}
+    const kb=()=>{const b=$('#kb');b.hidden=false;$('#mic-n').textContent='Appuyez dans le cadre, puis sur le micro du clavier, et dites tout d\'un coup.';const t=$('#kb-t');t.focus()};
+    $('#kb-go').onclick=()=>{const t=$('#kb-t').value.trim();if(!t){$('#kb-t').focus();return}apply(t);$('#kb-t').value=''};
+    mic.onclick=()=>{
+      if(!SR||IOS){kb();return}
+      if(on&&rec){rec.stop();return}
+      rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+      let finalTxt='';
+      rec.onresult=ev=>{let txt='';for(const r of ev.results)txt+=r[0].transcript;$('#mic-n').textContent='« '+txt+' »';if(ev.results[ev.results.length-1].isFinal)finalTxt=txt};
+      rec.onerror=ev=>{stop();if(ev.error==='no-speech'){toast('Je n\'ai rien entendu. Réessayez en parlant près du téléphone.');return}finalTxt='';kb()};
+      rec.onend=()=>{stop();if(finalTxt)apply(finalTxt)};
+      try{rec.start();on=true;$('#mic-l').textContent='J\'écoute… appuyez pour terminer';mic.classList.add('rec')}catch(e){stop();kb()}
     }}
   $('#n-photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);photoData=c.toDataURL('image/jpeg',.75);const pv=$('#n-prev');pv.src=photoData;pv.hidden=false};im.src=rd.result};rd.readAsDataURL(f)};
   const cv=$('#sig'),ctx=cv.getContext('2d');
